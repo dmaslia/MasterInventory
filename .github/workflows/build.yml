@@ -40,6 +40,23 @@ jobs:
         name: MasterInventory-build
         path: target/*.jar
 
+    # Delete existing release and tag if they exist (allows overwriting)
+    - name: Delete existing release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      run: |
+        gh release delete v${{ steps.version.outputs.version }} -y
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Delete existing tag
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      run: |
+        git push --delete origin v${{ steps.version.outputs.version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     # This puts the versioned JAR on the repository home page (under Releases)
     - name: Create GitHub Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
