@@ -27,6 +27,12 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml
 
+    - name: Extract version from pom.xml
+      id: version
+      run: |
+        VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
     # This keeps your current 'Artifact' behavior (what you see in your screenshots)
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
@@ -39,8 +45,8 @@ jobs:
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ github.run_number }}
-        name: Build ${{ github.run_number }}
+        tag_name: v${{ steps.version.outputs.version }}
+        name: ${{ steps.version.outputs.version }}
         files: target/*.jar
         draft: false
         prerelease: false
