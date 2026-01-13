@@ -1,0 +1,23 @@
+name: MasterInventory
+main: com.danielmaslia.masterinventory.MasterInventory
+version: ${project.version}
+api-version: 1.21
+commands:
+  getinv:
+    description: gets inventory
+    usage: /getinv
+  chat:
+    description: calls chat
+    usage: /chat
+  save:
+    description: saves coordinates
+    usage: /save <x> <y> <z> <description>
+  remind:
+    description: sets a reminder
+    usage: /remind [timer_dur] message
+  add:
+    description: adds the players chunk to the scanned chunks
+    usage: /add
+  remove:
+    description: removes the players chunk from the scanned chunks
+    usage: /remove
