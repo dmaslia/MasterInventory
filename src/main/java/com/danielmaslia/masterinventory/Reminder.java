@@ -19,35 +19,35 @@ import com.google.gson.reflect.TypeToken;
 import net.md_5.bungee.api.ChatColor;
 
 
-public class Timer {
-    public static Map<UUID, Map<String, Timer>> timers = new HashMap<>();
+public class Reminder {
+    public static Map<UUID, Map<String, Reminder>> reminders = new HashMap<>();
     private UUID playerUUID;
     // double representation of number of hours
     // -1 if no timer/on next join
-    private double timer;
+    private double dur;
     private int taskID;
     private long startedTime;
     private boolean active;
     private String name;
     private String description;
 
-    public Timer(UUID uuid, double timer, String name, String description) {
+    public Reminder(UUID uuid, double dur, String name, String description) {
         this.playerUUID = uuid;
-        this.timer = timer;
+        this.dur = dur;
         this.name = name;
         this.description = description;
         active = false;
     }
 
-    public double getTimer() {
-        return timer;
+    public double getDur() {
+        return dur;
     }
     
     public boolean removeTimer() {
-        if (timers.containsKey(playerUUID) && timers.get(playerUUID).get(name) != null) {
-            timers.get(playerUUID).remove(name);
-            if (timers.get(playerUUID).isEmpty()) {
-                timers.remove(playerUUID);
+        if (reminders.containsKey(playerUUID) && reminders.get(playerUUID).get(name) != null) {
+            reminders.get(playerUUID).remove(name);
+            if (reminders.get(playerUUID).isEmpty()) {
+                reminders.remove(playerUUID);
             }
             return true;
         }
@@ -59,7 +59,7 @@ public class Timer {
             long currTime = System.currentTimeMillis();
             Bukkit.getScheduler().cancelTask(taskID);
             double elapsedHours = (currTime - startedTime) / 3600000.0;
-            timer = timer - elapsedHours;
+            dur = dur - elapsedHours;
             active = false;
         }
     }
@@ -68,7 +68,7 @@ public class Timer {
         taskID = Bukkit.getScheduler().runTaskLater(MasterInventory.getPlugin(), () -> {
             sendMessage();
             removeTimer();
-        }, (long) (this.timer * 72000)).getTaskId();
+        }, (long) (this.dur * 72000)).getTaskId();
         active = true;
         startedTime = System.currentTimeMillis();
     }
@@ -86,17 +86,17 @@ public class Timer {
     }
     
     public boolean put() {
-        if (!Timer.timers.containsKey(playerUUID)) {
-                Timer.timers.put(playerUUID, new HashMap<>());
-                Timer.timers.get(playerUUID).put(name, this);
+        if (!Reminder.reminders.containsKey(playerUUID)) {
+                Reminder.reminders.put(playerUUID, new HashMap<>());
+                Reminder.reminders.get(playerUUID).put(name, this);
         } else {
-            if (Timer.timers.get(playerUUID).containsKey(name)) {
+            if (Reminder.reminders.get(playerUUID).containsKey(name)) {
                 return false;
             }
-            Timer.timers.get(playerUUID).put(name, this);
+            Reminder.reminders.get(playerUUID).put(name, this);
         }
         
-        if (this.timer == -1) {
+        if (this.dur == -1) {
             return true;
         }
         runTimer();
@@ -112,7 +112,7 @@ public class Timer {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         try (FileWriter writer = new FileWriter(dataFile)) {
-            gson.toJson(timers, writer);
+            gson.toJson(reminders, writer);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -126,11 +126,11 @@ public class Timer {
 
         Gson gson = new Gson();
         try (FileReader reader = new FileReader(dataFile)) {
-            Type type = new TypeToken<Map<UUID, Map<String, Timer>>>() {
+            Type type = new TypeToken<Map<UUID, Map<String, Reminder>>>() {
             }.getType();
-            Map<UUID, Map<String, Timer>> loadedTimers = gson.fromJson(reader, type);
-            if (loadedTimers != null) {
-                timers = loadedTimers;
+            Map<UUID, Map<String, Reminder>> loadedReminders = gson.fromJson(reader, type);
+            if (loadedReminders != null) {
+                reminders = loadedReminders;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -138,11 +138,11 @@ public class Timer {
     }
     
     public static void pauseTimers() {
-        for (Map.Entry<UUID, Map<String, Timer>> outerEntry : Timer.timers.entrySet()) {
-            for (Map.Entry<String, Timer> innerEntry : outerEntry.getValue().entrySet()) {
-                Timer timer = innerEntry.getValue();
+        for (Map.Entry<UUID, Map<String, Reminder>> outerEntry : Reminder.reminders.entrySet()) {
+            for (Map.Entry<String, Reminder> innerEntry : outerEntry.getValue().entrySet()) {
+                Reminder timer = innerEntry.getValue();
 
-                if (timer.getTimer() != -1.0) {
+                if (timer.getDur() != -1.0) {
                     timer.pauseTimer();
                 }
             }
@@ -150,11 +150,11 @@ public class Timer {
     }
 
     public static void runTimers() {
-        for (Map.Entry<UUID, Map<String, Timer>> outerEntry : Timer.timers.entrySet()) {
-            for (Map.Entry<String, Timer> innerEntry : outerEntry.getValue().entrySet()) {
-                Timer timer = innerEntry.getValue();
+        for (Map.Entry<UUID, Map<String, Reminder>> outerEntry : Reminder.reminders.entrySet()) {
+            for (Map.Entry<String, Reminder> innerEntry : outerEntry.getValue().entrySet()) {
+                Reminder timer = innerEntry.getValue();
 
-                if (timer.getTimer() != -1.0) {
+                if (timer.getDur() != -1.0) {
                     Player player = Bukkit.getPlayer(timer.playerUUID);
                     if (player != null && player.isOnline()) {
                         timer.runTimer();
