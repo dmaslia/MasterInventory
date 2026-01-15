@@ -28,8 +28,8 @@ public final class MasterInventory extends JavaPlugin {
         getLogger().info("MasterInventory is Starting Auto Save");
         getLogger().info("-----------------------------------");
 
-        Timer.loadReminders(getDataFolder());
-        Timer.runTimers();
+        Reminder.loadReminders(getDataFolder());
+        Reminder.runTimers();
 
         CSVExporter csvExporter = new CSVExporter(getDataFolder(), getLogger());
         inventoryManager = new InventoryManager(csvExporter, SCAN_X, SCAN_Y, SCAN_Z);
@@ -53,7 +53,7 @@ public final class MasterInventory extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        Timer.pauseTimers();
-        Timer.saveReminders(getDataFolder());
+        Reminder.pauseTimers();
+        Reminder.saveReminders(getDataFolder());
     }
 }

@@ -135,7 +135,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             }
             desc = (timer_dur == -1) ? String.join(" ", Arrays.copyOfRange(args, 1, args.length))
                     : String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-            Timer timer = new Timer(player.getUniqueId(), timer_dur, name, desc);
+            Reminder timer = new Reminder(player.getUniqueId(), timer_dur, name, desc);
             if (!timer.put()) {
                 player.sendMessage(ChatColor.RED + "You already have a reminder with name: " + ChatColor.AQUA + name);
             } else {
