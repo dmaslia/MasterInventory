@@ -28,11 +28,11 @@ public class EventListener implements Listener {
         inventoryManager.savePlayerInventory(event.getPlayer());
         event.getPlayer().sendMessage("§b[Chat] §7Hello, §a" + event.getPlayer().getName()
                 + "§7, I am here to help. Type §a\"/chat\" §7to start a session.");
-        if (Timer.timers.containsKey(event.getPlayer().getUniqueId())) {
-            for (Map.Entry<String, Timer> entry : Timer.timers.get(event.getPlayer().getUniqueId()).entrySet()) {
-                Timer timer = entry.getValue();
+        if (Reminder.reminders.containsKey(event.getPlayer().getUniqueId())) {
+            for (Map.Entry<String, Reminder> entry : Reminder.reminders.get(event.getPlayer().getUniqueId()).entrySet()) {
+                Reminder timer = entry.getValue();
                 
-                if (timer.getTimer() == -1.0) {
+                if (timer.getDur() == -1.0) {
                     // no error handling because player is online
                     timer.sendMessage();
                     // no error handling because existence in map already checked
@@ -47,11 +47,11 @@ public class EventListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         inventoryManager.savePlayerInventory(event.getPlayer());
-        if (Timer.timers.containsKey(event.getPlayer().getUniqueId())) {
-            for (Map.Entry<String, Timer> entry : Timer.timers.get(event.getPlayer().getUniqueId()).entrySet()) {
-                Timer timer = entry.getValue();
+        if (Reminder.reminders.containsKey(event.getPlayer().getUniqueId())) {
+            for (Map.Entry<String, Reminder> entry : Reminder.reminders.get(event.getPlayer().getUniqueId()).entrySet()) {
+                Reminder timer = entry.getValue();
                 
-                if (timer.getTimer() != -1.0) {
+                if (timer.getDur() != -1.0) {
                     timer.pauseTimer();
                 }
             }
