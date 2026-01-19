@@ -25,37 +25,16 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        inventoryManager.savePlayerInventory(event.getPlayer());
-        event.getPlayer().sendMessage("§b[Chat] §7Hello, §a" + event.getPlayer().getName()
+        Player p = event.getPlayer();
+        inventoryManager.savePlayerInventory(p);
+        p.sendMessage("§b[Chat] §7Hello, §a" + p.getName()
                 + "§7, I am here to help. Type §a\"/chat\" §7to start a session.");
-        if (Reminder.reminders.containsKey(event.getPlayer().getUniqueId())) {
-            for (Map.Entry<String, Reminder> entry : Reminder.reminders.get(event.getPlayer().getUniqueId()).entrySet()) {
-                Reminder timer = entry.getValue();
-                
-                if (timer.getDur() == -1.0) {
-                    // no error handling because player is online
-                    timer.sendMessage();
-                    // no error handling because existence in map already checked
-                    timer.removeTimer();
-                } else {
-                    timer.runTimer();
-                }
-            }
-        }
+        Reminder.playerJoin(p);
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         inventoryManager.savePlayerInventory(event.getPlayer());
-        if (Reminder.reminders.containsKey(event.getPlayer().getUniqueId())) {
-            for (Map.Entry<String, Reminder> entry : Reminder.reminders.get(event.getPlayer().getUniqueId()).entrySet()) {
-                Reminder timer = entry.getValue();
-                
-                if (timer.getDur() != -1.0) {
-                    timer.pauseTimer();
-                }
-            }
-        }
     }
 
     @EventHandler
