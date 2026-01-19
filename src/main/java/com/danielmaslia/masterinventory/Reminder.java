@@ -5,8 +5,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -21,61 +23,38 @@ import net.md_5.bungee.api.ChatColor;
 
 public class Reminder {
     public static Map<UUID, Map<String, Reminder>> reminders = new HashMap<>();
+    public static PriorityQueue<Reminder> reminderQueue = new PriorityQueue<>(
+        Comparator.comparingLong(r -> r.dispatchTime)
+    );
+
     private UUID playerUUID;
-    // double representation of number of hours
-    // -1 if no timer/on next join
-    private double dur;
-    private int taskID;
-    private long startedTime;
-    private boolean active;
     private String name;
     private String description;
+    private long dispatchTime;
 
-    public Reminder(UUID uuid, double dur, String name, String description) {
+    public Reminder(UUID uuid, String name, String description, long dispatchTime) {
         this.playerUUID = uuid;
-        this.dur = dur;
         this.name = name;
         this.description = description;
-        active = false;
-    }
-
-    public double getDur() {
-        return dur;
-    }
-    
-    public boolean removeTimer() {
-        if (reminders.containsKey(playerUUID) && reminders.get(playerUUID).get(name) != null) {
-            reminders.get(playerUUID).remove(name);
-            if (reminders.get(playerUUID).isEmpty()) {
-                reminders.remove(playerUUID);
-            }
-            return true;
+        this.dispatchTime = dispatchTime;
+        
+        if (!reminders.containsKey(playerUUID)) {
+                reminders.put(playerUUID, new HashMap<>());
+        } else if (reminders.get(playerUUID).containsKey(name)) {
+            throw new IllegalArgumentException(
+                    "reminder with that name exists for player " + uuid);
         }
-        return false;
-    }
 
-    public void pauseTimer() {
-        if (active) {
-            long currTime = System.currentTimeMillis();
-            Bukkit.getScheduler().cancelTask(taskID);
-            double elapsedHours = (currTime - startedTime) / 3600000.0;
-            dur = dur - elapsedHours;
-            active = false;
+        reminders.get(playerUUID).put(name, this);
+        if (dispatchTime != -1) {
+            reminderQueue.add(this);
         }
     }
     
-    public void runTimer() {
-        taskID = Bukkit.getScheduler().runTaskLater(MasterInventory.getPlugin(), () -> {
-            sendMessage();
-            removeTimer();
-        }, (long) (this.dur * 72000)).getTaskId();
-        active = true;
-        startedTime = System.currentTimeMillis();
-    }
-
+    
     public boolean sendMessage() {
         Player player = Bukkit.getPlayer(playerUUID);
-        if (player.isOnline()) {
+        if (player != null && player.isOnline()) {
             player.sendMessage(ChatColor.GRAY + "-----------------------------------");
             player.sendMessage(ChatColor.AQUA + "Reminder: " + ChatColor.GREEN + this.name);
             player.sendMessage(ChatColor.GRAY + this.description);
@@ -85,24 +64,39 @@ public class Reminder {
         return false;
     }
     
-    public boolean put() {
-        if (!Reminder.reminders.containsKey(playerUUID)) {
-                Reminder.reminders.put(playerUUID, new HashMap<>());
-                Reminder.reminders.get(playerUUID).put(name, this);
-        } else {
-            if (Reminder.reminders.get(playerUUID).containsKey(name)) {
+    public static void playerJoin(Player p) {
+        if (reminders.containsKey(p.getUniqueId())) {
+            reminders.get(p.getUniqueId()).values().removeIf(r -> {
+                if (r.dispatchTime == -1) {
+                    r.sendMessage();
+                    return true;
+                }
                 return false;
-            }
-            Reminder.reminders.get(playerUUID).put(name, this);
-        }
-        
-        if (this.dur == -1) {
-            return true;
-        }
-        runTimer();
+            });
 
-        return true;
+            if (reminders.get(p.getUniqueId()).isEmpty()) {
+                reminders.remove(p.getUniqueId());
+            }
+        }
     }
+
+    public static void checkReminders() {
+        long now = System.currentTimeMillis();
+        while (!reminderQueue.isEmpty() && reminderQueue.peek().dispatchTime <= now) {
+            Reminder r = reminderQueue.poll();
+            Player player = Bukkit.getPlayer(r.playerUUID);
+            if (player != null && player.isOnline()) {
+                r.sendMessage();
+                reminders.get(r.playerUUID).remove(r.name);
+                if (reminders.get(r.playerUUID).isEmpty()) {
+                    reminders.remove(r.playerUUID);
+                }
+            } else {
+                r.dispatchTime = -1;
+            }
+        }
+    }
+    
 
     public static void saveReminders(File dataFolder) {
         if (!dataFolder.exists()) {
@@ -131,36 +125,17 @@ public class Reminder {
             Map<UUID, Map<String, Reminder>> loadedReminders = gson.fromJson(reader, type);
             if (loadedReminders != null) {
                 reminders = loadedReminders;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    public static void pauseTimers() {
-        for (Map.Entry<UUID, Map<String, Reminder>> outerEntry : Reminder.reminders.entrySet()) {
-            for (Map.Entry<String, Reminder> innerEntry : outerEntry.getValue().entrySet()) {
-                Reminder timer = innerEntry.getValue();
-
-                if (timer.getDur() != -1.0) {
-                    timer.pauseTimer();
-                }
-            }
-        }
-    }
-
-    public static void runTimers() {
-        for (Map.Entry<UUID, Map<String, Reminder>> outerEntry : Reminder.reminders.entrySet()) {
-            for (Map.Entry<String, Reminder> innerEntry : outerEntry.getValue().entrySet()) {
-                Reminder timer = innerEntry.getValue();
-
-                if (timer.getDur() != -1.0) {
-                    Player player = Bukkit.getPlayer(timer.playerUUID);
-                    if (player != null && player.isOnline()) {
-                        timer.runTimer();
+                reminderQueue.clear();
+                for (Map<String, Reminder> playerReminders : reminders.values()) {
+                    for (Reminder r : playerReminders.values()) {
+                        if (r.dispatchTime != -1) {
+                            reminderQueue.add(r);
+                        }
                     }
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

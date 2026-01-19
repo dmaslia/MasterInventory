@@ -29,7 +29,6 @@ public final class MasterInventory extends JavaPlugin {
         getLogger().info("-----------------------------------");
 
         Reminder.loadReminders(getDataFolder());
-        Reminder.runTimers();
 
         CSVExporter csvExporter = new CSVExporter(getDataFolder(), getLogger());
         inventoryManager = new InventoryManager(csvExporter, SCAN_X, SCAN_Y, SCAN_Z);
@@ -49,11 +48,14 @@ public final class MasterInventory extends JavaPlugin {
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             inventoryManager.countInventory();
         }, 0L, AUTOSAVE_INTERVAL);
+
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            Reminder.checkReminders();
+        }, 0L, 20L);
     }
 
     @Override
     public void onDisable() {
-        Reminder.pauseTimers();
         Reminder.saveReminders(getDataFolder());
     }
 }
