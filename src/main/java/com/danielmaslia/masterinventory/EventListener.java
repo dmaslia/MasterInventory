@@ -9,7 +9,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Map;
 import java.util.UUID;
 
 public class EventListener implements Listener {
@@ -25,37 +24,16 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        inventoryManager.savePlayerInventory(event.getPlayer());
-        event.getPlayer().sendMessage("§b[Chat] §7Hello, §a" + event.getPlayer().getName()
+        Player p = event.getPlayer();
+        inventoryManager.savePlayerInventory(p);
+        p.sendMessage("§b[Chat] §7Hello, §a" + p.getName()
                 + "§7, I am here to help. Type §a\"/chat\" §7to start a session.");
-        if (Timer.timers.containsKey(event.getPlayer().getUniqueId())) {
-            for (Map.Entry<String, Timer> entry : Timer.timers.get(event.getPlayer().getUniqueId()).entrySet()) {
-                Timer timer = entry.getValue();
-                
-                if (timer.getTimer() == -1.0) {
-                    // no error handling because player is online
-                    timer.sendMessage();
-                    // no error handling because existence in map already checked
-                    timer.removeTimer();
-                } else {
-                    timer.runTimer();
-                }
-            }
-        }
+        Reminder.playerJoin(p);
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         inventoryManager.savePlayerInventory(event.getPlayer());
-        if (Timer.timers.containsKey(event.getPlayer().getUniqueId())) {
-            for (Map.Entry<String, Timer> entry : Timer.timers.get(event.getPlayer().getUniqueId()).entrySet()) {
-                Timer timer = entry.getValue();
-                
-                if (timer.getTimer() != -1.0) {
-                    timer.pauseTimer();
-                }
-            }
-        }
     }
 
     @EventHandler
