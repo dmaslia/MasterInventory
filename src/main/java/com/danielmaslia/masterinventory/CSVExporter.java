@@ -88,7 +88,7 @@ public class CSVExporter {
     
 
     // saver for inventory
-    public void saveInvToCSV(Map<Material, Integer> data, String fileName) {
+    public void saveInvToCSV(Map<InventoryManager.ItemKey, Integer> data, String fileName) {
         if (!dataFolder.exists()) {
             dataFolder.mkdirs();
         }
@@ -101,8 +101,12 @@ public class CSVExporter {
             pw.println("Inventory for " + fileName);
             pw.println("Material,Count");
 
-            for (Map.Entry<Material, Integer> entry : data.entrySet()) {
-                pw.println(StringUtils.formatEnumString(entry.getKey().toString()) + "," + entry.getValue());
+            for (Map.Entry<InventoryManager.ItemKey, Integer> entry : data.entrySet()) {
+                pw.println(
+                    StringUtils.formatEnumString(entry.getKey().material().toString()) + "," +
+                    entry.getKey().id() + "," +
+                    entry.getValue()
+                );
             }
 
             pw.flush();
