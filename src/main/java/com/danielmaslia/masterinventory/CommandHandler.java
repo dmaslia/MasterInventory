@@ -125,27 +125,28 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 player.sendMessage(ChatColor.RED + "Usage: /remind <reminder_name> [timer] <description");
                 return true;
             }
-            double timer_dur;
+            long dispatchTime;
             String name = args[0];
             String desc;
             try {
-                timer_dur = Double.parseDouble(args[1]);
+                double hours = Double.parseDouble(args[1]);
+                dispatchTime = System.currentTimeMillis() + (long)(hours * 3600000);
+                desc = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
             } catch (NumberFormatException e) {
-                timer_dur = -1;
+                dispatchTime = -1;
+                desc = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
             }
-            desc = (timer_dur == -1) ? String.join(" ", Arrays.copyOfRange(args, 1, args.length))
-                    : String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-            Timer timer = new Timer(player.getUniqueId(), timer_dur, name, desc);
-            if (!timer.put()) {
-                player.sendMessage(ChatColor.RED + "You already have a reminder with name: " + ChatColor.AQUA + name);
-            } else {
+            try {
+                new Reminder(player.getUniqueId(), name, desc, dispatchTime);
                 player.sendMessage(ChatColor.GRAY + "-----------------------------------");
                 player.sendMessage(ChatColor.GREEN + "Reminder Added");
                 player.sendMessage(ChatColor.AQUA + "Name: " + ChatColor.GRAY + name);
                 player.sendMessage(ChatColor.AQUA + "Duration: " + ChatColor.GRAY
-                        + (timer_dur == -1 ? "On next join" : timer_dur + " hours"));
+                        + (dispatchTime == -1 ? "On next join" : ((dispatchTime - System.currentTimeMillis()) / 3600000.0) + " hours"));
                 player.sendMessage(ChatColor.AQUA + "Description: " + ChatColor.GRAY + desc);
                 player.sendMessage(ChatColor.GRAY + "-----------------------------------");
+            } catch (IllegalArgumentException e) {
+                player.sendMessage(ChatColor.RED + "You already have a reminder with name: " + ChatColor.AQUA + name);
             }
 
             return true;
