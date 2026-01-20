@@ -50,24 +50,20 @@ public class InventoryManager {
             if (stack == null || stack.getType().isAir()) continue;
 
             Integer shulkerId = null;
-            boolean isPopulatedShulker = false;
-            ShulkerBox sb = null;
+            ShulkerBox shulkerBox = null;
 
-            if (stack.getType().name().endsWith("SHULKER_BOX")) {
-                if (stack.getItemMeta() instanceof BlockStateMeta meta) {
-                    if (meta.getBlockState() instanceof ShulkerBox box) {
-                        sb = box;
-                        if (!sb.getInventory().isEmpty()) {
-                            isPopulatedShulker = true;
-                            shulkerId = lastId++;
-                        }
-                    }
-                }
+            if (stack.getType().name().endsWith("SHULKER_BOX") &&
+                stack.getItemMeta() instanceof BlockStateMeta meta &&
+                meta.getBlockState() instanceof ShulkerBox box &&
+                !box.getInventory().isEmpty()) {
+                
+                shulkerBox = box;
+                shulkerId = lastId++;
             }
 
-            if (isPopulatedShulker) {
+            if (shulkerBox != null) {
                 targetMap.merge(new ItemKey(stack.getType(), shulkerId), 1, Integer::sum);
-                for (ItemStack s : sb.getInventory().getContents()) {
+                for (ItemStack s : shulkerBox.getInventory().getContents()) {
                     if (s != null && !s.getType().isAir()) {
                         targetMap.merge(new ItemKey(s.getType(), shulkerId), s.getAmount(), Integer::sum);
                     }
