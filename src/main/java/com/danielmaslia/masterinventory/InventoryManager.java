@@ -7,11 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
@@ -25,7 +22,7 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 public class InventoryManager {
     public static record ItemKey(
         Material material, 
-        @Nullable Integer id
+        Integer id
     ) {}
 
     private final CSVExporter csvExporter;
