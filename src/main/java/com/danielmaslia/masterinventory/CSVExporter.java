@@ -11,8 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
+
+import com.danielmaslia.masterinventory.InventoryManager.ChunkCoord;
 
 public class CSVExporter {
     private final File dataFolder;
@@ -119,7 +124,7 @@ public class CSVExporter {
         }
     }
 
-    public void saveChunkToFile(int chunkX, int chunkZ) {
+    public void saveChunkToFile(int chunkX, int chunkZ, String world) {
         if (!dataFolder.exists()) {
             dataFolder.mkdirs();
         }
@@ -129,11 +134,11 @@ public class CSVExporter {
         try {
             FileWriter fw = new FileWriter(file, true);
             PrintWriter pw = new PrintWriter(fw);
-            pw.println(chunkX + ", " + chunkZ);
+            pw.println(chunkX + ", " + chunkZ + ", " + world);
             pw.flush();
             pw.close();
 
-            logger.info("Chunk saved: " + chunkX + ", " + chunkZ);
+            logger.info("Chunk saved: " + chunkX + ", " + chunkZ + ", " + world);
 
         } catch (IOException e) {
             logger.severe("Could not save chunk to file!");
@@ -141,8 +146,8 @@ public class CSVExporter {
         }
     }
 
-    public List<int[]> loadChunksFromFile() {
-        List<int[]> chunks = new ArrayList<>();
+    public List<ChunkCoord> loadChunksFromFile() {
+        List<ChunkCoord> chunks = new ArrayList<>();
         File file = new File(dataFolder, "chunks.txt");
 
         if (!file.exists()) {
@@ -157,7 +162,8 @@ public class CSVExporter {
                 if (parts.length == 2) {
                     int x = Integer.parseInt(parts[0].trim());
                     int z = Integer.parseInt(parts[1].trim());
-                    chunks.add(new int[]{x, z});
+                    World world = Bukkit.getWorld(parts[2].trim());
+                    chunks.add(new ChunkCoord(x, z, world));
                 }
             }
             reader.close();

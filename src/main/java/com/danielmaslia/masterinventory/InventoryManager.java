@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.block.ShulkerBox;
@@ -30,31 +31,28 @@ public class InventoryManager {
 
     public InventoryManager(CSVExporter csvExporter, int x, int y, int z) {
         this.csvExporter = csvExporter;
-        this.chunkCoords = new ArrayList<>();
+        // Load additional chunks from file
+        chunkCoords = csvExporter.loadChunksFromFile();
 
         // Build initial list from radius
         Chunk centerChunk = new Location(Bukkit.getWorld("world"), x, y, z).getChunk();
         int radius = 10;
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
-                chunkCoords.add(new ChunkCoord(centerChunk.getX() + dx, centerChunk.getZ() + dz));
+                chunkCoords.add(new ChunkCoord(centerChunk.getX() + dx, centerChunk.getZ() + dz, Bukkit.getWorld("world")));
             }
         }
 
-        // Load additional chunks from file
-        List<int[]> loadedChunks = csvExporter.loadChunksFromFile();
-        for (int[] chunk : loadedChunks) {
-            chunkCoords.add(new ChunkCoord(chunk[0], chunk[1]));
-        }
     }
 
     public static class ChunkCoord {
         public final int x;
         public final int z;
-
-        public ChunkCoord(int x, int z) {
+        public final World world;
+        public ChunkCoord(int x, int z, World world) {
             this.x = x;
             this.z = z;
+            this.world = world;
         }
     }
     
@@ -138,13 +136,13 @@ public class InventoryManager {
         }
     }
 
-    public boolean addChunk(int chunkX, int chunkZ) {
+    public boolean addChunk(int chunkX, int chunkZ, World world) {
         for (ChunkCoord coord : chunkCoords) {
             if (coord.x == chunkX && coord.z == chunkZ) {
                 return false;
             }
         }
-        chunkCoords.add(new ChunkCoord(chunkX, chunkZ));
+        chunkCoords.add(new ChunkCoord(chunkX, chunkZ, world));
         return true;
     }
 

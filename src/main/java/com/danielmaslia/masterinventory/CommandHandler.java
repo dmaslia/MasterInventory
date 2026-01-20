@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -156,11 +157,12 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             Player player = (Player) sender;
             int chunkX = player.getLocation().getChunk().getX();
             int chunkZ = player.getLocation().getChunk().getZ();
+            World world = player.getWorld();
 
-            boolean added = inventoryManager.addChunk(chunkX, chunkZ);
+            boolean added = inventoryManager.addChunk(chunkX, chunkZ, world);
 
             if (added) {
-                csvExporter.saveChunkToFile(chunkX, chunkZ);
+                csvExporter.saveChunkToFile(chunkX, chunkZ, world.toString());
                 player.sendMessage(ChatColor.GREEN + "Chunk added: " + ChatColor.GRAY + chunkX + ", " + chunkZ);
                 inventoryManager.countInventory();
             } else {
