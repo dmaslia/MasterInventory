@@ -7,8 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
@@ -20,6 +23,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 
 public class InventoryManager {
+    public static record ItemKey(
+        Material material, 
+        @Nullable Integer id
+    ) {}
+
     private final CSVExporter csvExporter;
     private List<ChunkCoord> chunkCoords;
 
@@ -52,62 +60,68 @@ public class InventoryManager {
             this.z = z;
         }
     }
+    
 
-    public void savePlayerInventory(Player player) {
-        Map<Material, Integer> counts = new HashMap<>();
-        ItemStack[] playerInv = player.getInventory().getContents();
-        ItemStack[] enderInv = player.getEnderChest().getContents();
-        ItemStack[] combined = Stream.concat(Arrays.stream(enderInv), Arrays.stream(playerInv))
-                                     .toArray(ItemStack[]::new);
+    private int processInventory(ItemStack[] items, Map<ItemKey, Integer> targetMap, int lastId) {
+        for (ItemStack stack : items) {
+            if (stack == null || stack.getType().isAir()) continue;
 
-        for (ItemStack stack : combined) {
-            if (stack != null && !stack.getType().isAir()) {
-                Material type = stack.getType();
-                if (type.equals(Material.SHULKER_BOX) && stack.getItemMeta() instanceof BlockStateMeta) {
-                    BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();
-                    ShulkerBox sb = (ShulkerBox) meta.getBlockState();
-                    for (ItemStack s : sb.getInventory()) {
-                        if (s != null && !s.getType().isAir()) {
-                            counts.merge(s.getType(), s.getAmount(), Integer::sum);
+            Integer shulkerId = null;
+            boolean isPopulatedShulker = false;
+            ShulkerBox sb = null;
+
+            if (stack.getType().name().endsWith("SHULKER_BOX")) {
+                if (stack.getItemMeta() instanceof BlockStateMeta meta) {
+                    if (meta.getBlockState() instanceof ShulkerBox box) {
+                        sb = box;
+                        if (!sb.getInventory().isEmpty()) {
+                            isPopulatedShulker = true;
+                            shulkerId = lastId++;
                         }
                     }
                 }
-                counts.merge(stack.getType(), stack.getAmount(), Integer::sum);
+            }
+
+            if (isPopulatedShulker) {
+                targetMap.merge(new ItemKey(stack.getType(), shulkerId), 1, Integer::sum);
+                for (ItemStack s : sb.getInventory().getContents()) {
+                    if (s != null && !s.getType().isAir()) {
+                        targetMap.merge(new ItemKey(s.getType(), shulkerId), s.getAmount(), Integer::sum);
+                    }
+                }
+            } else {
+                targetMap.merge(new ItemKey(stack.getType(), null), stack.getAmount(), Integer::sum);
             }
         }
+        return lastId;
+    }
+
+    public void savePlayerInventory(Player player) {
+        Map<ItemKey, Integer> counts = new HashMap<>();
+        
+        ItemStack[] combined = Stream.of(
+            player.getEnderChest().getContents(),
+            player.getInventory().getContents()
+        ).flatMap(Arrays::stream).toArray(ItemStack[]::new);
+
+        processInventory(combined, counts, 0);
+
         csvExporter.saveInvToCSV(counts, player.getName() + ".csv");
     }
 
     public void saveChunkContainers() {
-        Map<Material, Integer> counts = new HashMap<>();
-        Map<Material, Integer> countsLarge = new HashMap<>();
-        Map<Material, Integer> currCounts;
+        int lastId = 0;
+        Map<ItemKey, Integer> counts = new HashMap<>();
+        Map<ItemKey, Integer> countsLarge = new HashMap<>();
 
         for (ChunkCoord coord : chunkCoords) {
             Chunk currChunk = Bukkit.getWorld("world").getChunkAt(coord.x, coord.z);
-            BlockState[] tileEntities = currChunk.getTileEntities();
-
-            for (BlockState state : tileEntities) {
-                if (state instanceof Container) {
-                    Container container = (Container) state;
+            for (BlockState state : currChunk.getTileEntities()) {
+                if (state instanceof Container container) {
                     Inventory inv = container.getInventory();
-                    ItemStack[] items = inv.getContents();
-                    currCounts = inv.getSize() == 54 ? countsLarge : counts;
-
-                    for (ItemStack stack : items) {
-                        if (stack != null && !stack.getType().isAir()) {
-                            currCounts.merge(stack.getType(), stack.getAmount(), Integer::sum);
-                            if (stack.getType().equals(Material.SHULKER_BOX) && stack.getItemMeta() instanceof BlockStateMeta) {
-                                BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();
-                                ShulkerBox sb = (ShulkerBox) meta.getBlockState();
-                                for (ItemStack s : sb.getInventory()) {
-                                    if (s != null && !s.getType().isAir()) {
-                                        currCounts.merge(s.getType(), s.getAmount(), Integer::sum);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    Map<ItemKey, Integer> targetMap = (inv.getSize() == 54) ? countsLarge : counts;
+                    
+                    lastId = processInventory(inv.getContents(), targetMap, lastId);
                 }
             }
         }
