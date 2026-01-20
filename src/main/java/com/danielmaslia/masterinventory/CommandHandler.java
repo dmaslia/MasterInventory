@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -155,35 +156,31 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         
         if (cmd.getName().equals("add") && sender instanceof Player) {
             Player player = (Player) sender;
-            int chunkX = player.getLocation().getChunk().getX();
-            int chunkZ = player.getLocation().getChunk().getZ();
-            World world = player.getWorld();
-
-            boolean added = inventoryManager.addChunk(chunkX, chunkZ, world);
+            Chunk chunk = player.getLocation().getChunk();
+            boolean added = inventoryManager.addChunk(chunk);
 
             if (added) {
-                csvExporter.saveChunkToFile(chunkX, chunkZ, world.toString());
-                player.sendMessage(ChatColor.GREEN + "Chunk added: " + ChatColor.GRAY + chunkX + ", " + chunkZ);
+                csvExporter.saveChunkToFile(chunk);
+                player.sendMessage(ChatColor.GREEN + "Chunk added: " + ChatColor.GRAY + chunk.getX() + ", " + chunk.getZ());
                 inventoryManager.countInventory();
             } else {
-                player.sendMessage(ChatColor.YELLOW + "Chunk already exists: " + ChatColor.GRAY + chunkX + ", " + chunkZ);
+                player.sendMessage(ChatColor.YELLOW + "Chunk already exists: " + ChatColor.GRAY + chunk.getX() + ", " + chunk.getZ());
             }
             return true;
         }
 
         if (cmd.getName().equals("remove") && sender instanceof Player) {
             Player player = (Player) sender;
-            int chunkX = player.getLocation().getChunk().getX();
-            int chunkZ = player.getLocation().getChunk().getZ();
+            Chunk chunk = player.getLocation().getChunk();
 
-            boolean removedFromList = inventoryManager.removeChunk(chunkX, chunkZ);
-            boolean removedFromFile = csvExporter.removeChunkFromFile(chunkX, chunkZ);
+            boolean removedFromList = inventoryManager.removeChunk(chunk);
+            boolean removedFromFile = csvExporter.removeChunkFromFile(chunk);
 
             if (removedFromList || removedFromFile) {
-                player.sendMessage(ChatColor.RED + "Chunk removed: " + ChatColor.GRAY + chunkX + ", " + chunkZ);
+                player.sendMessage(ChatColor.RED + "Chunk removed: " + ChatColor.GRAY + chunk.getX() + ", " + chunk.getZ());
                 inventoryManager.countInventory();
             } else {
-                player.sendMessage(ChatColor.YELLOW + "Chunk not found: " + ChatColor.GRAY + chunkX + ", " + chunkZ);
+                player.sendMessage(ChatColor.YELLOW + "Chunk not found: " + ChatColor.GRAY + chunk.getX() + ", " + chunk.getZ());
             }
             return true;
         }

@@ -27,35 +27,23 @@ public class InventoryManager {
     ) {}
 
     private final CSVExporter csvExporter;
-    private List<ChunkCoord> chunkCoords;
+    private List<Chunk> chunks;
 
     public InventoryManager(CSVExporter csvExporter, int x, int y, int z) {
         this.csvExporter = csvExporter;
         // Load additional chunks from file
-        chunkCoords = csvExporter.loadChunksFromFile();
+        chunks = csvExporter.loadChunksFromFile();
 
         // Build initial list from radius
         Chunk centerChunk = new Location(Bukkit.getWorld("world"), x, y, z).getChunk();
         int radius = 10;
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
-                chunkCoords.add(new ChunkCoord(centerChunk.getX() + dx, centerChunk.getZ() + dz, Bukkit.getWorld("world")));
+                chunks.add(Bukkit.getWorld("world").getChunkAt(centerChunk.getX() + dx, centerChunk.getZ() + dz));
             }
         }
 
     }
-
-    public static class ChunkCoord {
-        public final int x;
-        public final int z;
-        public final World world;
-        public ChunkCoord(int x, int z, World world) {
-            this.x = x;
-            this.z = z;
-            this.world = world;
-        }
-    }
-    
 
     private int processInventory(ItemStack[] items, Map<ItemKey, Integer> targetMap, int lastId) {
         for (ItemStack stack : items) {
@@ -109,9 +97,8 @@ public class InventoryManager {
         Map<ItemKey, Integer> counts = new HashMap<>();
         Map<ItemKey, Integer> countsLarge = new HashMap<>();
 
-        for (ChunkCoord coord : chunkCoords) {
-            Chunk currChunk = Bukkit.getWorld("world").getChunkAt(coord.x, coord.z);
-            for (BlockState state : currChunk.getTileEntities()) {
+        for (Chunk chunk : chunks) {
+            for (BlockState state : chunk.getTileEntities()) {
                 if (state instanceof Container container) {
                     Inventory inv = container.getInventory();
                     Map<ItemKey, Integer> targetMap = (inv.getSize() == 54) ? countsLarge : counts;
@@ -136,17 +123,23 @@ public class InventoryManager {
         }
     }
 
-    public boolean addChunk(int chunkX, int chunkZ, World world) {
-        for (ChunkCoord coord : chunkCoords) {
-            if (coord.x == chunkX && coord.z == chunkZ) {
+    public boolean addChunk(Chunk c) {
+
+        for (Chunk chunk : chunks) {
+
+            if (c.getX() == chunk.getX() && c.getZ() == chunk.getZ() && c.getWorld().getName().equals(chunk.getWorld().getName())) {
                 return false;
             }
         }
-        chunkCoords.add(new ChunkCoord(chunkX, chunkZ, world));
+        chunks.add(c);
         return true;
     }
 
-    public boolean removeChunk(int chunkX, int chunkZ) {
-        return chunkCoords.removeIf(coord -> coord.x == chunkX && coord.z == chunkZ);
+    public boolean removeChunk(Chunk c) {
+        return chunks.removeIf(
+            coord -> coord.getX() == c.getX() &&
+            coord.getZ() == c.getZ() &&
+            coord.getWorld().getName().equals(c.getWorld().getName())
+        );
     }
 }

@@ -17,8 +17,6 @@ import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import com.danielmaslia.masterinventory.InventoryManager.ChunkCoord;
-
 public class CSVExporter {
     private final File dataFolder;
     private final Logger logger;
@@ -124,7 +122,7 @@ public class CSVExporter {
         }
     }
 
-    public void saveChunkToFile(int chunkX, int chunkZ, String world) {
+    public void saveChunkToFile(Chunk chunk) {
         if (!dataFolder.exists()) {
             dataFolder.mkdirs();
         }
@@ -134,11 +132,11 @@ public class CSVExporter {
         try {
             FileWriter fw = new FileWriter(file, true);
             PrintWriter pw = new PrintWriter(fw);
-            pw.println(chunkX + ", " + chunkZ + ", " + world);
+            pw.println(chunk.getX() + ", " + chunk.getZ() + ", " + chunk.getWorld().getName());
             pw.flush();
             pw.close();
 
-            logger.info("Chunk saved: " + chunkX + ", " + chunkZ + ", " + world);
+            logger.info("Chunk saved: " + chunk.getX() + ", " + chunk.getZ() + ", " + chunk.getWorld().getName());
 
         } catch (IOException e) {
             logger.severe("Could not save chunk to file!");
@@ -146,8 +144,8 @@ public class CSVExporter {
         }
     }
 
-    public List<ChunkCoord> loadChunksFromFile() {
-        List<ChunkCoord> chunks = new ArrayList<>();
+    public List<Chunk> loadChunksFromFile() {
+        List<Chunk> chunks = new ArrayList<>();
         File file = new File(dataFolder, "chunks.txt");
 
         if (!file.exists()) {
@@ -162,8 +160,9 @@ public class CSVExporter {
                 if (parts.length == 2) {
                     int x = Integer.parseInt(parts[0].trim());
                     int z = Integer.parseInt(parts[1].trim());
-                    World world = Bukkit.getWorld(parts[2].trim());
-                    chunks.add(new ChunkCoord(x, z, world));
+
+                    World world = (parts.length > 2) ? Bukkit.getWorld(parts[2].trim()) : Bukkit.getWorld("world");
+                    chunks.add(world.getChunkAt(x, z));
                 }
             }
             reader.close();
@@ -176,7 +175,7 @@ public class CSVExporter {
         return chunks;
     }
 
-    public boolean removeChunkFromFile(int chunkX, int chunkZ) {
+    public boolean removeChunkFromFile(Chunk chunk) {
         if (!dataFolder.exists()) {
             return false;
         }
@@ -188,7 +187,7 @@ public class CSVExporter {
 
         List<String> lines = new ArrayList<>();
         boolean removed = false;
-        String targetLine = chunkX + ", " + chunkZ;
+        String targetLine = chunk.getX() + ", " + chunk.getZ() + ", " + chunk.getWorld().getName();
 
         try {
             BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -210,7 +209,7 @@ public class CSVExporter {
                 }
                 pw.flush();
                 pw.close();
-                logger.info("Chunk removed: " + chunkX + ", " + chunkZ);
+                logger.info("Chunk removed: " + chunk.getX() + ", " + chunk.getZ() + ", " + chunk.getWorld().getName());
             }
 
         } catch (IOException e) {
