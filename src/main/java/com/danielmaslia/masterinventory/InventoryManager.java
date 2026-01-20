@@ -20,27 +20,46 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 
 public class InventoryManager {
     public static record ItemKey(
-        Material material, 
+        Material material,
         Integer id
+    ) {}
+
+    public static record ScanArea(
+        Location center,
+        int radius
     ) {}
 
     private final CSVExporter csvExporter;
     private List<Chunk> chunks;
 
-    public InventoryManager(CSVExporter csvExporter, int x, int y, int z) {
+    public InventoryManager(CSVExporter csvExporter, ScanArea worldArea, ScanArea netherArea, ScanArea endArea) {
         this.csvExporter = csvExporter;
         // Load additional chunks from file
         chunks = csvExporter.loadChunksFromFile();
 
-        // Build initial list from radius
-        Chunk centerChunk = new Location(Bukkit.getWorld("world"), x, y, z).getChunk();
-        int radius = 10;
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                chunks.add(Bukkit.getWorld("world").getChunkAt(centerChunk.getX() + dx, centerChunk.getZ() + dz));
-            }
+        // Add world chunks if provided
+        if (worldArea != null) {
+            addChunksFromArea(worldArea, "world");
         }
 
+        // Add nether chunks if provided
+        if (netherArea != null) {
+            addChunksFromArea(netherArea, "world_nether");
+        }
+
+        // Add end chunks if provided
+        if (endArea != null) {
+            addChunksFromArea(endArea, "world_the_end");
+        }
+    }
+
+    private void addChunksFromArea(ScanArea area, String worldName) {
+        Chunk centerChunk = area.center().getChunk();
+        for (int dx = -area.radius(); dx <= area.radius(); dx++) {
+            for (int dz = -area.radius(); dz <= area.radius(); dz++) {
+                chunks.add(Bukkit.getWorld(worldName).getChunkAt(centerChunk.getX() + dx, centerChunk.getZ() + dz));
+            }
+        }
     }
 
     private int processInventory(ItemStack[] items, Map<ItemKey, Integer> targetMap, int lastId) {

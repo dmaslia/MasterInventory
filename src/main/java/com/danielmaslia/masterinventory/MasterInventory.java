@@ -1,6 +1,7 @@
 package com.danielmaslia.masterinventory;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class MasterInventory extends JavaPlugin {
@@ -9,6 +10,7 @@ public final class MasterInventory extends JavaPlugin {
     private static final int SCAN_X = -1977;
     private static final int SCAN_Y = 73;
     private static final int SCAN_Z = 329;
+    private static final int SCAN_RADIUS = 10;
     private static final long AUTOSAVE_INTERVAL = 12000L;
 
     private InventoryManager inventoryManager;
@@ -31,7 +33,9 @@ public final class MasterInventory extends JavaPlugin {
         Reminder.loadReminders(getDataFolder());
 
         CSVExporter csvExporter = new CSVExporter(getDataFolder(), getLogger());
-        inventoryManager = new InventoryManager(csvExporter, SCAN_X, SCAN_Y, SCAN_Z);
+        Location worldCenter = new Location(Bukkit.getWorld("world"), SCAN_X, SCAN_Y, SCAN_Z);
+        InventoryManager.ScanArea worldArea = new InventoryManager.ScanArea(worldCenter, SCAN_RADIUS);
+        inventoryManager = new InventoryManager(csvExporter, worldArea, null, null);
         chatManager = new ChatManager(this);
         eventListener = new EventListener(this, inventoryManager, chatManager);
         commandHandler = new CommandHandler(inventoryManager, chatManager, csvExporter);
