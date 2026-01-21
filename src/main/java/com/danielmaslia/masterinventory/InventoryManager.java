@@ -109,6 +109,12 @@ public class InventoryManager {
         for (Chunk chunk : chunks) {
             for (BlockState state : chunk.getTileEntities()) {
                 if (state instanceof Container container) {
+                    if(
+                        state.getLocation().getWorld().getName().equals("world_nether") && 
+                        state.getLocation().getY() < 120
+                    ) {
+                        continue;
+                    }
                     Inventory inv = container.getInventory();
                     Map<ItemKey, Integer> targetMap = (inv.getSize() == 54) ? countsLarge : counts;
                     
