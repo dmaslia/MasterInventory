@@ -7,10 +7,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class MasterInventory extends JavaPlugin {
     private static MasterInventory plugin;
 
-    private static final int SCAN_X = -1977;
-    private static final int SCAN_Y = 73;
-    private static final int SCAN_Z = 329;
-    private static final int SCAN_RADIUS = 10;
+    Location worldCenter = new Location(Bukkit.getWorld("world"), -1977, 73, 329);
+    InventoryManager.ScanArea worldArea = new InventoryManager.ScanArea(worldCenter, 10);
+    Location netherCenter = new Location(Bukkit.getWorld("world_nether"), -257, 128, 42);
+    InventoryManager.ScanArea netherArea = new InventoryManager.ScanArea(netherCenter, 20);
+    Location endCenter = new Location(Bukkit.getWorld("world_the_end"), 2, 61, -2);
+    InventoryManager.ScanArea endArea = new InventoryManager.ScanArea(endCenter, 10);
     private static final long AUTOSAVE_INTERVAL = 12000L;
 
     private InventoryManager inventoryManager;
@@ -33,9 +35,7 @@ public final class MasterInventory extends JavaPlugin {
         Reminder.loadReminders(getDataFolder());
 
         CSVExporter csvExporter = new CSVExporter(getDataFolder(), getLogger());
-        Location worldCenter = new Location(Bukkit.getWorld("world"), SCAN_X, SCAN_Y, SCAN_Z);
-        InventoryManager.ScanArea worldArea = new InventoryManager.ScanArea(worldCenter, SCAN_RADIUS);
-        inventoryManager = new InventoryManager(csvExporter, worldArea, null, null);
+        inventoryManager = new InventoryManager(csvExporter, worldArea, netherArea, endArea);
         chatManager = new ChatManager(this);
         eventListener = new EventListener(this, inventoryManager, chatManager);
         commandHandler = new CommandHandler(inventoryManager, chatManager, csvExporter);

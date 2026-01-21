@@ -34,30 +34,26 @@ public class InventoryManager {
 
     public InventoryManager(CSVExporter csvExporter, ScanArea worldArea, ScanArea netherArea, ScanArea endArea) {
         this.csvExporter = csvExporter;
-        // Load additional chunks from file
         chunks = csvExporter.loadChunksFromFile();
 
-        // Add world chunks if provided
         if (worldArea != null) {
-            addChunksFromArea(worldArea, "world");
+            addChunksFromArea(worldArea);
         }
 
-        // Add nether chunks if provided
         if (netherArea != null) {
-            addChunksFromArea(netherArea, "world_nether");
+            addChunksFromArea(netherArea);
         }
 
-        // Add end chunks if provided
         if (endArea != null) {
-            addChunksFromArea(endArea, "world_the_end");
+            addChunksFromArea(endArea);
         }
     }
 
-    private void addChunksFromArea(ScanArea area, String worldName) {
+    private void addChunksFromArea(ScanArea area) {
         Chunk centerChunk = area.center().getChunk();
         for (int dx = -area.radius(); dx <= area.radius(); dx++) {
             for (int dz = -area.radius(); dz <= area.radius(); dz++) {
-                chunks.add(Bukkit.getWorld(worldName).getChunkAt(centerChunk.getX() + dx, centerChunk.getZ() + dz));
+                chunks.add(area.center.getWorld().getChunkAt(centerChunk.getX() + dx, centerChunk.getZ() + dz));
             }
         }
     }
