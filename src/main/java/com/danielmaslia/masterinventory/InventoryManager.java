@@ -1,6 +1,5 @@
 package com.danielmaslia.masterinventory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -21,67 +20,63 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 
 public class InventoryManager {
     public static record ItemKey(
-        Material material, 
+        Material material,
         Integer id
     ) {}
 
+    public static record ScanArea(
+        Location center,
+        int radius
+    ) {}
+
     private final CSVExporter csvExporter;
-    private List<ChunkCoord> chunkCoords;
+    private List<Chunk> chunks;
 
-    public InventoryManager(CSVExporter csvExporter, int x, int y, int z) {
+    public InventoryManager(CSVExporter csvExporter, ScanArea worldArea, ScanArea netherArea, ScanArea endArea) {
         this.csvExporter = csvExporter;
-        this.chunkCoords = new ArrayList<>();
+        chunks = csvExporter.loadChunksFromFile();
 
-        // Build initial list from radius
-        Chunk centerChunk = new Location(Bukkit.getWorld("world"), x, y, z).getChunk();
-        int radius = 10;
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                chunkCoords.add(new ChunkCoord(centerChunk.getX() + dx, centerChunk.getZ() + dz));
+        if (worldArea != null) {
+            addChunksFromArea(worldArea);
+        }
+
+        if (netherArea != null) {
+            addChunksFromArea(netherArea);
+        }
+
+        if (endArea != null) {
+            addChunksFromArea(endArea);
+        }
+    }
+
+    private void addChunksFromArea(ScanArea area) {
+        Chunk centerChunk = area.center().getChunk();
+        for (int dx = -area.radius(); dx <= area.radius(); dx++) {
+            for (int dz = -area.radius(); dz <= area.radius(); dz++) {
+                chunks.add(area.center.getWorld().getChunkAt(centerChunk.getX() + dx, centerChunk.getZ() + dz));
             }
         }
-
-        // Load additional chunks from file
-        List<int[]> loadedChunks = csvExporter.loadChunksFromFile();
-        for (int[] chunk : loadedChunks) {
-            chunkCoords.add(new ChunkCoord(chunk[0], chunk[1]));
-        }
     }
-
-    public static class ChunkCoord {
-        public final int x;
-        public final int z;
-
-        public ChunkCoord(int x, int z) {
-            this.x = x;
-            this.z = z;
-        }
-    }
-    
 
     private int processInventory(ItemStack[] items, Map<ItemKey, Integer> targetMap, int lastId) {
         for (ItemStack stack : items) {
             if (stack == null || stack.getType().isAir()) continue;
 
             Integer shulkerId = null;
-            boolean isPopulatedShulker = false;
-            ShulkerBox sb = null;
+            ShulkerBox shulkerBox = null;
 
-            if (stack.getType().name().endsWith("SHULKER_BOX")) {
-                if (stack.getItemMeta() instanceof BlockStateMeta meta) {
-                    if (meta.getBlockState() instanceof ShulkerBox box) {
-                        sb = box;
-                        if (!sb.getInventory().isEmpty()) {
-                            isPopulatedShulker = true;
-                            shulkerId = lastId++;
-                        }
-                    }
-                }
+            if (stack.getType().name().endsWith("SHULKER_BOX") &&
+                stack.getItemMeta() instanceof BlockStateMeta meta &&
+                meta.getBlockState() instanceof ShulkerBox box &&
+                !box.getInventory().isEmpty()) {
+                
+                shulkerBox = box;
+                shulkerId = lastId++;
             }
 
-            if (isPopulatedShulker) {
+            if (shulkerBox != null) {
                 targetMap.merge(new ItemKey(stack.getType(), shulkerId), 1, Integer::sum);
-                for (ItemStack s : sb.getInventory().getContents()) {
+                for (ItemStack s : shulkerBox.getInventory().getContents()) {
                     if (s != null && !s.getType().isAir()) {
                         targetMap.merge(new ItemKey(s.getType(), shulkerId), s.getAmount(), Integer::sum);
                     }
@@ -111,9 +106,8 @@ public class InventoryManager {
         Map<ItemKey, Integer> counts = new HashMap<>();
         Map<ItemKey, Integer> countsLarge = new HashMap<>();
 
-        for (ChunkCoord coord : chunkCoords) {
-            Chunk currChunk = Bukkit.getWorld("world").getChunkAt(coord.x, coord.z);
-            for (BlockState state : currChunk.getTileEntities()) {
+        for (Chunk chunk : chunks) {
+            for (BlockState state : chunk.getTileEntities()) {
                 if (state instanceof Container container) {
                     Inventory inv = container.getInventory();
                     Map<ItemKey, Integer> targetMap = (inv.getSize() == 54) ? countsLarge : counts;
@@ -138,17 +132,23 @@ public class InventoryManager {
         }
     }
 
-    public boolean addChunk(int chunkX, int chunkZ) {
-        for (ChunkCoord coord : chunkCoords) {
-            if (coord.x == chunkX && coord.z == chunkZ) {
+    public boolean addChunk(Chunk c) {
+
+        for (Chunk chunk : chunks) {
+
+            if (c.getX() == chunk.getX() && c.getZ() == chunk.getZ() && c.getWorld().getName().equals(chunk.getWorld().getName())) {
                 return false;
             }
         }
-        chunkCoords.add(new ChunkCoord(chunkX, chunkZ));
+        chunks.add(c);
         return true;
     }
 
-    public boolean removeChunk(int chunkX, int chunkZ) {
-        return chunkCoords.removeIf(coord -> coord.x == chunkX && coord.z == chunkZ);
+    public boolean removeChunk(Chunk c) {
+        return chunks.removeIf(
+            coord -> coord.getX() == c.getX() &&
+            coord.getZ() == c.getZ() &&
+            coord.getWorld().getName().equals(c.getWorld().getName())
+        );
     }
 }
