@@ -26,6 +26,7 @@ public class InventoryManager {
 
     public static record ScanArea(
         Location center,
+        String world,
         int radius
     ) {}
 
@@ -37,14 +38,17 @@ public class InventoryManager {
         chunks = csvExporter.loadChunksFromFile();
 
         if (worldArea != null) {
+            worldArea.center().setWorld(Bukkit.getWorld(worldArea.world()));
             addChunksFromArea(worldArea);
         }
 
         if (netherArea != null) {
+            netherArea.center().setWorld(Bukkit.getWorld(netherArea.world()));
             addChunksFromArea(netherArea);
         }
 
         if (endArea != null) {
+            endArea.center().setWorld(Bukkit.getWorld(endArea.world()));
             addChunksFromArea(endArea);
         }
     }

@@ -7,12 +7,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class MasterInventory extends JavaPlugin {
     private static MasterInventory plugin;
 
-    Location worldCenter = new Location(Bukkit.getWorld("world"), -1977, 73, 329);
-    InventoryManager.ScanArea worldArea = new InventoryManager.ScanArea(worldCenter, 10);
-    Location netherCenter = new Location(Bukkit.getWorld("world_nether"), -257, 128, 42);
-    InventoryManager.ScanArea netherArea = new InventoryManager.ScanArea(netherCenter, 20);
-    Location endCenter = new Location(Bukkit.getWorld("world_the_end"), 2, 61, -2);
-    InventoryManager.ScanArea endArea = new InventoryManager.ScanArea(endCenter, 10);
+
+    Location worldCenter = new Location(null, -1977, 73, 329);
+    InventoryManager.ScanArea worldArea = new InventoryManager.ScanArea(worldCenter, "world", 10);
+    Location netherCenter = new Location(null, -257, 128, 42);
+    InventoryManager.ScanArea netherArea = new InventoryManager.ScanArea(netherCenter, "world_nether", 20);
+    Location endCenter = new Location(null, 2, 61, -2);
+    InventoryManager.ScanArea endArea = new InventoryManager.ScanArea(endCenter, "world_the_end", 10);
     private static final long AUTOSAVE_INTERVAL = 12000L;
 
     private InventoryManager inventoryManager;
