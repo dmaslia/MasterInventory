@@ -35,7 +35,7 @@ public final class MasterInventory extends JavaPlugin {
         Reminder.loadReminders(getDataFolder());
 
         CSVExporter csvExporter = new CSVExporter(getDataFolder(), getLogger());
-        inventoryManager = new InventoryManager(csvExporter, worldArea, netherArea, endArea);
+        inventoryManager = new InventoryManager(csvExporter, worldArea, null, null);
         chatManager = new ChatManager(this);
         eventListener = new EventListener(this, inventoryManager, chatManager);
         commandHandler = new CommandHandler(inventoryManager, chatManager, csvExporter);
