@@ -183,6 +183,9 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         }
 
         if(cmd.getName().equals("p") && sender instanceof Player player) {
+            if(!chatManager.isOn()) {
+                player.sendMessage(ChatColor.RED + "No chat session active");
+            }
             UUID playerId = player.getUniqueId();
             if(chatManager.isInConversation(playerId)) {
                 chatManager.removeFromConversation(playerId);

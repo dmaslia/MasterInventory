@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,14 +21,18 @@ import net.md_5.bungee.api.chat.TextComponent;
 
 public class ChatManager {
     private final JavaPlugin plugin;
-    private final List<UUID> players = new ArrayList<UUID>();
+    private final Set<UUID> players = new HashSet<UUID>();
     private final List<String> conversationHistory = new ArrayList<String>();
     private Integer chatTimer = -1;
     private final long chatDur = 6000;
-    private BukkitTask actionBarTask;
+    private Map<UUID, Integer> actionBarTasks = new HashMap<>();
 
     public ChatManager(JavaPlugin plugin) {
         this.plugin = plugin;
+    }
+
+    public boolean isOn() {
+        return (chatTimer != -1);
     }
 
     public boolean isInConversation(UUID playerId) {
@@ -48,6 +53,7 @@ public class ChatManager {
     public void startConversation() {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if(p != null) {
+                players.add(p.getUniqueId());
                 showChatIndicator(p.getUniqueId());
             }
         }
@@ -59,6 +65,7 @@ public class ChatManager {
         for(UUID uuid : players) {
             hideChatIndicator(uuid);
         }
+        players.clear();
         Bukkit.getScheduler().cancelTask(chatTimer);
         chatTimer = -1;
     }
@@ -89,31 +96,39 @@ public class ChatManager {
 
     private void showChatIndicator(UUID uuid) {
         // Send action bar message repeatedly (every second) to keep it visible
-        actionBarTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            TextComponent message = new TextComponent("§8[§aChat§8]");
-            Player player = Bukkit.getPlayer(uuid);
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, message);
-        }, 0L, 20L); // Run immediately, then every 20 ticks (1 second)
+        if(Bukkit.getPlayer(uuid) == null || !Bukkit.getPlayer(uuid).isOnline()) {
+            return;
+        }
+        Player player = Bukkit.getPlayer(uuid);
+        int taskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (player != null && player.isOnline()) {
+                TextComponent message = new TextComponent("§8[§aChat§8]");
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, message);
+            }
+        }, 0L, 20L).getTaskId(); // Run immediately, then every 20 ticks (1 second)
+        actionBarTasks.put(uuid, taskId);
     }
 
     private void hideChatIndicator(UUID uuid) {
-        if (actionBarTask != null) {
-            actionBarTask.cancel();
-            actionBarTask = null;
+        if (actionBarTasks.containsKey(uuid)) {
+            Bukkit.getScheduler().cancelTask(actionBarTasks.get(uuid));
+            actionBarTasks.remove(uuid);
 
             // Clear the action bar
-            TextComponent empty = new TextComponent("");
-            Player player = Bukkit.getPlayer(uuid);
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, empty);
+            if(Bukkit.getPlayer(uuid) != null && Bukkit.getPlayer(uuid).isOnline()) {
+                TextComponent empty = new TextComponent("");
+                Player player = Bukkit.getPlayer(uuid);
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, empty);
+            }
 
         }
     }
 
-    public void addToHistory(UUID playerId, String message) {
+    public void addToHistory(String message) {
         conversationHistory.add(message);
     }
 
-    public String getFullHistory(UUID playerId) {
+    public String getFullHistory() {
         if (!conversationHistory.isEmpty()) {
             return String.join("###", conversationHistory);
         }
