@@ -21,3 +21,6 @@ commands:
   remove:
     description: removes the players chunk from the scanned chunks
     usage: /remove
+  p:
+    description: takes player out of chat session
+    usage: /p [chat]

@@ -47,7 +47,7 @@ public class EventListener implements Listener {
             Bukkit.broadcastMessage("§a[" + player.getName() + "] §f " + message);
 
             if (message.equalsIgnoreCase("exit")) {
-                chatManager.endConversation(player.getUniqueId());
+                chatManager.endConversation();
                 Bukkit.broadcastMessage("§b[Chat] §7Session ended. Memory cleared.");
                 return;
             }
