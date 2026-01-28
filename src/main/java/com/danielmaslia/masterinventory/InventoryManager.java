@@ -21,7 +21,8 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 public class InventoryManager {
     public static record ItemKey(
         Material material,
-        Integer id
+        Integer id,
+        Location loc
     ) {}
 
     public static record ScanArea(
@@ -62,7 +63,7 @@ public class InventoryManager {
         }
     }
 
-    private int processInventory(ItemStack[] items, Map<ItemKey, Integer> targetMap, int lastId) {
+    private int processInventory(ItemStack[] items, Map<ItemKey, Integer> targetMap, int lastId, Location loc) {
         for (ItemStack stack : items) {
             if (stack == null || stack.getType().isAir()) continue;
 
@@ -79,14 +80,14 @@ public class InventoryManager {
             }
 
             if (shulkerBox != null) {
-                targetMap.merge(new ItemKey(stack.getType(), shulkerId), 1, Integer::sum);
+                targetMap.merge(new ItemKey(stack.getType(), shulkerId, loc), 1, Integer::sum);
                 for (ItemStack s : shulkerBox.getInventory().getContents()) {
                     if (s != null && !s.getType().isAir()) {
-                        targetMap.merge(new ItemKey(s.getType(), shulkerId), s.getAmount(), Integer::sum);
+                        targetMap.merge(new ItemKey(s.getType(), shulkerId, loc), s.getAmount(), Integer::sum);
                     }
                 }
             } else {
-                targetMap.merge(new ItemKey(stack.getType(), null), stack.getAmount(), Integer::sum);
+                targetMap.merge(new ItemKey(stack.getType(), null, loc), stack.getAmount(), Integer::sum);
             }
         }
         return lastId;
@@ -100,7 +101,7 @@ public class InventoryManager {
             player.getInventory().getContents()
         ).flatMap(Arrays::stream).toArray(ItemStack[]::new);
 
-        processInventory(combined, counts, 0);
+        processInventory(combined, counts, 0, player.getLocation());
 
         csvExporter.saveInvToCSV(counts, player.getName() + ".csv");
     }
@@ -122,7 +123,7 @@ public class InventoryManager {
                     Inventory inv = container.getInventory();
                     Map<ItemKey, Integer> targetMap = (inv.getSize() == 54) ? countsLarge : counts;
                     
-                    lastId = processInventory(inv.getContents(), targetMap, lastId);
+                    lastId = processInventory(inv.getContents(), targetMap, lastId, state.getLocation());
                 }
             }
         }

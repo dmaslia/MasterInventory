@@ -101,13 +101,14 @@ public class CSVExporter {
             FileWriter fw = new FileWriter(file, false);
             PrintWriter pw = new PrintWriter(fw);
             pw.println("Inventory for " + fileName);
-            pw.println("Material,Count,ID");
+            pw.println("Material,Count,ID,loc");
 
             for (Map.Entry<InventoryManager.ItemKey, Integer> entry : data.entrySet()) {
                 pw.println(
                     StringUtils.formatEnumString(entry.getKey().material().toString()) + "," +
                     entry.getValue() + "," +
-                    entry.getKey().id()
+                    entry.getKey().id() + "," +
+                    entry.getKey().loc()
                 );
             }
 
