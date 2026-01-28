@@ -34,6 +34,7 @@ public class EventListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         inventoryManager.savePlayerInventory(event.getPlayer());
+        chatManager.removeFromConversation(event.getPlayer().getUniqueId());
     }
 
     @EventHandler
@@ -47,18 +48,18 @@ public class EventListener implements Listener {
             Bukkit.broadcastMessage("§a[" + player.getName() + "] §f " + message);
 
             if (message.equalsIgnoreCase("exit")) {
-                chatManager.endConversation(player.getUniqueId());
+                chatManager.endConversation();
                 Bukkit.broadcastMessage("§b[Chat] §7Session ended. Memory cleared.");
                 return;
             }
 
             chatManager.pauseTimer();
-            chatManager.addToHistory(player.getUniqueId(), player.getName() + ": " + message);
+            chatManager.addToHistory(player.getName() + ": " + message);
 
             Bukkit.getScheduler().runTask(plugin, () -> {
                 inventoryManager.countInventory();
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                    String fullHistory = chatManager.getFullHistory(uuid);
+                    String fullHistory = chatManager.getFullHistory();
                     Bukkit.broadcastMessage("§b[Chat] §7One sec...");
                     chatManager.runPythonAI(player, fullHistory);
                 });

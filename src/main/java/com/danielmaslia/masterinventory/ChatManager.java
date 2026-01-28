@@ -6,8 +6,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -19,91 +21,116 @@ import net.md_5.bungee.api.chat.TextComponent;
 
 public class ChatManager {
     private final JavaPlugin plugin;
-    private final Map<Integer, List<String>> conversationHistory = new HashMap<>();
-    private final Map<Integer, Integer> chatTimers = new HashMap<>();
+    private final Set<UUID> players = new HashSet<UUID>();
+    private final List<String> conversationHistory = new ArrayList<String>();
+    private Integer chatTimer = -1;
     private final long chatDur = 6000;
-    private BukkitTask actionBarTask;
+    private Map<UUID, Integer> actionBarTasks = new HashMap<>();
 
     public ChatManager(JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
+    public boolean isOn() {
+        return (chatTimer != -1);
+    }
+
     public boolean isInConversation(UUID playerId) {
-        return conversationHistory.containsKey(0);
+        return players.contains(playerId);
     }
 
-    public void startConversation(UUID playerId) {
-        conversationHistory.putIfAbsent(0, new ArrayList<>());
-        showChatIndicator();
-        startTimer(playerId);
+    public void addToConversation(UUID playerId) {
+        players.add(playerId);
+        showChatIndicator(playerId);
     }
 
-    public void endConversation(UUID playerId) {
-        conversationHistory.remove(0);
-        hideChatIndicator();
+    public void removeFromConversation(UUID playerId) {
+        players.remove(playerId);
+        hideChatIndicator(playerId);
+    }
 
-        if (chatTimers.containsKey(0)) {
-            Bukkit.getScheduler().cancelTask(chatTimers.get(0));
-            chatTimers.remove(0);
+
+    public void startConversation() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if(p != null) {
+                players.add(p.getUniqueId());
+                showChatIndicator(p.getUniqueId());
+            }
         }
+        startTimer();
     }
 
-    private void startTimer(UUID playerId) {
-        if (chatTimers.containsKey(0)) {
-            Bukkit.getScheduler().cancelTask(chatTimers.get(0));
+    public void endConversation() {
+        conversationHistory.clear();
+        for(UUID uuid : players) {
+            hideChatIndicator(uuid);
+        }
+        players.clear();
+        Bukkit.getScheduler().cancelTask(chatTimer);
+        chatTimer = -1;
+    }
+
+    private void startTimer() {
+        if (chatTimer != -1) {
+            Bukkit.getScheduler().cancelTask(chatTimer);
         }
 
         int taskId = Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            endConversation(playerId);
+            endConversation();
             Bukkit.broadcastMessage("§b[Chat] §7Session ended due to inactivity.");
         }, chatDur).getTaskId();
 
-        chatTimers.put(0, taskId);
+        chatTimer = taskId;
     }
 
     public void pauseTimer() {
-        if (chatTimers.containsKey(0)) {
-            Bukkit.getScheduler().cancelTask(chatTimers.get(0));
-            chatTimers.remove(0);
+        if (chatTimer != -1) {
+            Bukkit.getScheduler().cancelTask(chatTimer);
+            chatTimer = -1;
         }
     }
 
-    public void resumeTimer(UUID playerId) {
-        startTimer(playerId);
+    public void resumeTimer() {
+        startTimer();
     }
 
-    private void showChatIndicator() {
+    private void showChatIndicator(UUID uuid) {
         // Send action bar message repeatedly (every second) to keep it visible
-        actionBarTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            TextComponent message = new TextComponent("§8[§aChat§8]");
-            for (Player player : Bukkit.getOnlinePlayers()) {
+        if(Bukkit.getPlayer(uuid) == null || !Bukkit.getPlayer(uuid).isOnline()) {
+            return;
+        }
+        Player player = Bukkit.getPlayer(uuid);
+        int taskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (player != null && player.isOnline()) {
+                TextComponent message = new TextComponent("§8[§aChat§8]");
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, message);
             }
-        }, 0L, 20L); // Run immediately, then every 20 ticks (1 second)
+        }, 0L, 20L).getTaskId(); // Run immediately, then every 20 ticks (1 second)
+        actionBarTasks.put(uuid, taskId);
     }
 
-    private void hideChatIndicator() {
-        if (actionBarTask != null) {
-            actionBarTask.cancel();
-            actionBarTask = null;
+    private void hideChatIndicator(UUID uuid) {
+        if (actionBarTasks.containsKey(uuid)) {
+            Bukkit.getScheduler().cancelTask(actionBarTasks.get(uuid));
+            actionBarTasks.remove(uuid);
 
             // Clear the action bar
-            TextComponent empty = new TextComponent("");
-            for (Player player : Bukkit.getOnlinePlayers()) {
+            if(Bukkit.getPlayer(uuid) != null && Bukkit.getPlayer(uuid).isOnline()) {
+                TextComponent empty = new TextComponent("");
+                Player player = Bukkit.getPlayer(uuid);
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, empty);
             }
+
         }
     }
 
-    public void addToHistory(UUID playerId, String message) {
-        if (conversationHistory.containsKey(0)) {
-            conversationHistory.get(0).add(message);
-        }
+    public void addToHistory(String message) {
+        conversationHistory.add(message);
     }
 
-    public String getFullHistory(UUID playerId) {
-        if (conversationHistory.containsKey(0)) {
-            return String.join("###", conversationHistory.get(0));
+    public String getFullHistory() {
+        if (!conversationHistory.isEmpty()) {
+            return String.join("###", conversationHistory);
         }
         return "";
     }
@@ -145,17 +172,17 @@ public class ChatManager {
                     if (result.isEmpty()) {
                     	Bukkit.broadcastMessage("§b[Chat] §7Error: AI returned an empty response.");
                     } else {
-                        if (conversationHistory.containsKey(0)) {
-                            conversationHistory.get(0).add("system: " + result);
+                        if (!conversationHistory.isEmpty()) {
+                            conversationHistory.add("system: " + result);
                         }
                     }
-                    resumeTimer(player.getUniqueId());
+                    resumeTimer();
                 });
 
             } catch (Exception e) {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     Bukkit.broadcastMessage("§b[Chat] §7System Error: " + e.getMessage());
-                    resumeTimer(player.getUniqueId());
+                    resumeTimer();
                 });
             }
         });

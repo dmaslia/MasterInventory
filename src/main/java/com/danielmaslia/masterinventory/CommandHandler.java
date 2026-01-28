@@ -3,6 +3,7 @@ package com.danielmaslia.masterinventory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -72,7 +73,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 inventoryManager.countInventory();
             	Bukkit.broadcastMessage("§bSession started. Type §a\"exit\" §bto end.");
             	Bukkit.broadcastMessage("§b[Chat] §7What's up?");
-                chatManager.startConversation(player.getUniqueId());
+                chatManager.startConversation();
             } else {
                 sender.sendMessage(ChatColor.RED + "Usage: /chat");
                 return true;
@@ -120,8 +121,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             return true;
         }
         
-        if (cmd.getName().equals("remind") && sender instanceof Player) {
-            Player player = (Player) sender;
+        if (cmd.getName().equals("remind") && sender instanceof Player player) {
             if (args.length < 2) {
                 player.sendMessage(ChatColor.RED + "Usage: /remind <reminder_name> [timer] <description");
                 return true;
@@ -153,8 +153,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             return true;
         }
         
-        if (cmd.getName().equals("add") && sender instanceof Player) {
-            Player player = (Player) sender;
+        if (cmd.getName().equals("add") && sender instanceof Player player) {
             Chunk chunk = player.getLocation().getChunk();
             boolean added = inventoryManager.addChunk(chunk);
 
@@ -168,8 +167,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (cmd.getName().equals("remove") && sender instanceof Player) {
-            Player player = (Player) sender;
+        if (cmd.getName().equals("remove") && sender instanceof Player player) {
             Chunk chunk = player.getLocation().getChunk();
 
             boolean removedFromList = inventoryManager.removeChunk(chunk);
@@ -182,6 +180,20 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 player.sendMessage(ChatColor.YELLOW + "Chunk not found: " + ChatColor.GRAY + chunk.getX() + ", " + chunk.getZ());
             }
             return true;
+        }
+
+        if(cmd.getName().equals("p") && sender instanceof Player player) {
+            if(!chatManager.isOn()) {
+                player.sendMessage(ChatColor.RED + "No chat session active");
+            }
+            UUID playerId = player.getUniqueId();
+            if(chatManager.isInConversation(playerId)) {
+                chatManager.removeFromConversation(playerId);
+            } else {
+                chatManager.addToConversation(playerId);
+            }
+            return true;
+
         }
 
         return false;
