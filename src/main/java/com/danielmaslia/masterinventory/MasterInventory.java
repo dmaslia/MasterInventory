@@ -49,6 +49,7 @@ public final class MasterInventory extends JavaPlugin {
         getCommand("add").setExecutor(commandHandler);
         getCommand("remove").setExecutor(commandHandler);
         getCommand("remind").setTabCompleter(commandHandler);
+        getCommand("p").setExecutor(commandHandler);
 
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             inventoryManager.countInventory();
