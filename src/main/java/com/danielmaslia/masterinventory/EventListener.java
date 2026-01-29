@@ -50,8 +50,8 @@ public class EventListener implements Listener {
                 recipe.getResult(),
                 0,              // uses
                 Integer.MAX_VALUE, // maxUses
-                recipe.hasExperienceReward(),
-                recipe.getVillagerExperience(),
+                false,          // no xp reward
+                0,              // no villager xp
                 recipe.getPriceMultiplier()
         );
         unlimited.setIngredients(recipe.getIngredients());
@@ -69,8 +69,8 @@ public class EventListener implements Listener {
                     recipe.getResult(),
                     0,              // uses
                     Integer.MAX_VALUE, // maxUses
-                    recipe.hasExperienceReward(),
-                    recipe.getVillagerExperience(),
+                    false,          // no xp reward
+                    0,              // no villager xp
                     recipe.getPriceMultiplier()
             );
             reset.setIngredients(recipe.getIngredients());
