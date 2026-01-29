@@ -2,16 +2,18 @@ import os
 import sys
 import json
 import time
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-
-import sys
 # Force the standard output to use UTF-8 encoding
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
 # 1. Setup absolute paths so the server always finds your files
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Load .env from the same directory as this script
+load_dotenv(os.path.join(SCRIPT_DIR, '.env'))
 
 # Automatically find all CSV files in the directory
 file_paths = [
@@ -20,7 +22,7 @@ file_paths = [
     if f.endswith('.csv')
 ]
 
-client = genai.Client(api_key='AIzaSyAF3-Atk5r5G7vVZmPXqnT_DAJck7-M-R8')
+client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
 
 # Cache file to store uploaded file URIs
 CACHE_FILE = os.path.join(SCRIPT_DIR, '.uploaded_files_cache.json')
