@@ -4,9 +4,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.VillagerAcquireTradeEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.UUID;
@@ -35,6 +37,21 @@ public class EventListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         inventoryManager.savePlayerInventory(event.getPlayer());
         chatManager.removeFromConversation(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onVillagerAcquireTrade(VillagerAcquireTradeEvent event) {
+        MerchantRecipe recipe = event.getRecipe();
+        MerchantRecipe unlimited = new MerchantRecipe(
+                recipe.getResult(),
+                0,              // uses
+                Integer.MAX_VALUE, // maxUses
+                recipe.hasExperienceReward(),
+                recipe.getVillagerExperience(),
+                recipe.getPriceMultiplier()
+        );
+        unlimited.setIngredients(recipe.getIngredients());
+        event.setRecipe(unlimited);
     }
 
     @EventHandler
