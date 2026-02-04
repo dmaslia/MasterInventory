@@ -6,7 +6,7 @@
 
     <groupId>com.danielmaslia</groupId>
     <artifactId>MasterInventory</artifactId>
-    <version>1.5.6-SNAPSHOT</version>
+    <version>1.5.7-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

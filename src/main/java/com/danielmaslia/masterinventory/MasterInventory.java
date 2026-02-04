@@ -51,13 +51,23 @@ public final class MasterInventory extends JavaPlugin {
         getCommand("remind").setTabCompleter(commandHandler);
         getCommand("p").setExecutor(commandHandler);
 
+        // automatic inventory counting
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             inventoryManager.countInventory();
         }, 0L, AUTOSAVE_INTERVAL);
 
+        // automatic reminder checking 
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             Reminder.checkReminders();
         }, 0L, 20L);
+
+        // automatic villager reset
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            EventListener.resetVillagers();
+        }, 0L, 2400L);
+
+
+
     }
 
     @Override
