@@ -24,3 +24,6 @@ commands:
   p:
     description: takes player out of chat session
     usage: /p [chat]
+  fixvillagers:
+    description: fixes villager maxUses from trades.csv
+    usage: /fixvillagers

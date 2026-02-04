@@ -34,6 +34,7 @@ public final class MasterInventory extends JavaPlugin {
         getLogger().info("-----------------------------------");
 
         Reminder.loadReminders(getDataFolder());
+        saveResource("trades.csv", false);
 
         CSVExporter csvExporter = new CSVExporter(getDataFolder(), getLogger());
         inventoryManager = new InventoryManager(csvExporter, worldArea, netherArea, endArea);
@@ -50,6 +51,7 @@ public final class MasterInventory extends JavaPlugin {
         getCommand("remove").setExecutor(commandHandler);
         getCommand("remind").setTabCompleter(commandHandler);
         getCommand("p").setExecutor(commandHandler);
+        getCommand("fixvillagers").setExecutor(commandHandler);
 
         // automatic inventory counting
         Bukkit.getScheduler().runTaskTimer(this, () -> {
