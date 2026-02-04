@@ -46,7 +46,7 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        if (!(event.getRightClicked() instanceof Villager villager) || true) {
+        if (!(event.getRightClicked() instanceof Villager villager)) {
             return;
         }
         
@@ -66,7 +66,7 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onVillagerReplenish(VillagerReplenishTradeEvent event) {
-        event.setCancelled(false);
+        event.setCancelled(true);
     }
 
     public static void resetVillagers() {
@@ -82,6 +82,7 @@ public class EventListener implements Listener {
                     for (MerchantRecipe recipe : recipes) {
                         recipe.setUses(0);
                         recipe.setExperienceReward(false);
+                        recipe.setDemand(0);
                     }
                     v.setRecipes(recipes);
 

@@ -63,7 +63,7 @@ public final class MasterInventory extends JavaPlugin {
 
         // automatic villager reset
         Bukkit.getScheduler().runTaskTimer(this, () -> {
-            // EventListener.resetVillagers();
+            EventListener.resetVillagers();
         }, 0L, 2400L);
 
 
