@@ -52,24 +52,6 @@ public final class MasterInventory extends JavaPlugin {
         }
     }
 
-    private static org.bukkit.Sound getWorkSound(Villager.Profession profession) {
-    return switch (profession) {
-        case Villager.Profession.ARMORER:
-            return org.bukkit.Sound.BLOCK_ANVIL_USE;
-        case BUTCHER -> org.bukkit.Sound.ENTITY_VILLAGER_WORK_BUTCHER;
-        case CARTOGRAPHER -> org.bukkit.Sound.ENTITY_VILLAGER_WORK_CARTOGRAPHER;
-        case CLERIC -> org.bukkit.Sound.ENTITY_VILLAGER_WORK_CLERIC;
-        case FARMER -> org.bukkit.Sound.ENTITY_VILLAGER_WORK_FARMER;
-        case FISHERMAN -> org.bukkit.Sound.ENTITY_VILLAGER_WORK_FISHERMAN;
-        case FLETCHER -> org.bukkit.Sound.ENTITY_VILLAGER_WORK_FLETCHER;
-        case LEATHERWORKER -> org.bukkit.Sound.ENTITY_VILLAGER_WORK_LEATHERWORKER;
-        case LIBRARIAN -> org.bukkit.Sound.ENTITY_VILLAGER_WORK_LIBRARIAN;
-        case MASON -> org.bukkit.Sound.ENTITY_VILLAGER_WORK_MASON;
-        case SHEPHERD -> org.bukkit.Sound.ENTITY_VILLAGER_WORK_SHEPHERD;
-        case TOOLSMITH, WEAPONSMITH -> org.bukkit.Sound.BLOCK_GRINDSTONE_USE;
-        default -> org.bukkit.Sound.ENTITY_VILLAGER_YES; // Generic "happy" sound
-    };
-}
 
     public static MasterInventory getPlugin() {
         return plugin;
