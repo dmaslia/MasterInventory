@@ -1,11 +1,13 @@
 package com.danielmaslia.masterinventory;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
+import org.bukkit.entity.Villager.Profession;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.VillagerAcquireTradeEvent;
 import org.bukkit.event.entity.VillagerReplenishTradeEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -65,6 +67,48 @@ public class EventListener implements Listener {
     @EventHandler
     public void onVillagerReplenish(VillagerReplenishTradeEvent event) {
         event.setCancelled(true);
+    }
+
+    public static void resetVillagers() {
+        for (World world : Bukkit.getWorlds()) {
+            long time = world.getTime();
+            if (time < 0 || time > 12000) {
+                continue;
+            }
+
+            for (Villager v : world.getEntitiesByClass(Villager.class)) {
+                if (v.getProfession() != Profession.NONE && v.getProfession() != Profession.NITWIT && !v.isSleeping()) {
+                    java.util.List<MerchantRecipe> recipes = new java.util.ArrayList<>(v.getRecipes());
+                    for (MerchantRecipe recipe : recipes) {
+                        recipe.setUses(0);
+                        recipe.setExperienceReward(false);
+                    }
+                    v.setRecipes(recipes);
+
+                    Sound workSound = getWorkSound(v.getProfession());
+                    if (workSound != null) {
+                        world.playSound(v.getLocation(), workSound, 1.0f, 1.0f);
+                    }
+                }
+            }
+        }
+    }
+
+    private static Sound getWorkSound(Profession profession) {
+        if (profession == Profession.ARMORER) return Sound.BLOCK_BLASTFURNACE_FIRE_CRACKLE;
+        if (profession == Profession.BUTCHER) return Sound.BLOCK_SMOKER_SMOKE;
+        if (profession == Profession.CARTOGRAPHER) return Sound.UI_CARTOGRAPHY_TABLE_TAKE_RESULT;
+        if (profession == Profession.CLERIC) return Sound.BLOCK_BREWING_STAND_BREW;
+        if (profession == Profession.FARMER) return Sound.ITEM_HOE_TILL;
+        if (profession == Profession.FISHERMAN) return Sound.ENTITY_FISHING_BOBBER_SPLASH;
+        if (profession == Profession.FLETCHER) return Sound.ITEM_CROSSBOW_LOADING_MIDDLE;
+        if (profession == Profession.LEATHERWORKER) return Sound.BLOCK_FIRE_EXTINGUISH;
+        if (profession == Profession.LIBRARIAN) return Sound.ITEM_BOOK_PAGE_TURN;
+        if (profession == Profession.MASON) return Sound.UI_STONECUTTER_TAKE_RESULT;
+        if (profession == Profession.SHEPHERD) return Sound.ENTITY_SHEEP_SHEAR;
+        if (profession == Profession.TOOLSMITH) return Sound.BLOCK_ANVIL_USE;
+        if (profession == Profession.WEAPONSMITH) return Sound.BLOCK_ANVIL_USE;
+        return null;
     }
 
     @EventHandler
