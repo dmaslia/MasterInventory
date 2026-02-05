@@ -219,7 +219,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 for (Villager v : world.getEntitiesByClass(Villager.class)) {
                     if (v.getProfession() == Profession.NONE || v.getProfession() == Profession.NITWIT) continue;
 
-                    String profName = v.getProfession().toString();
+                    String profName = v.getProfession().name();
                     List<MerchantRecipe> recipes = new ArrayList<>(v.getRecipes());
                     boolean modified = false;
 
