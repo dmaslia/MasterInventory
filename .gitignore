@@ -4,3 +4,4 @@
 .vscode/
 venv/
 .env
+run_cmd.py
