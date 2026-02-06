@@ -2,7 +2,12 @@ package com.danielmaslia.masterinventory;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 public final class MasterInventory extends JavaPlugin {
     private static MasterInventory plugin;
@@ -66,7 +71,29 @@ public final class MasterInventory extends JavaPlugin {
             EventListener.resetVillagers();
         }, 0L, 2400L);
 
+        // nametag through walls for named mobs
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        Team nametagTeam = scoreboard.getTeam("namedMobs");
+        if (nametagTeam == null) {
+            nametagTeam = scoreboard.registerNewTeam("namedMobs");
+        }
+        nametagTeam.setAllowFriendlyFire(true);
+        nametagTeam.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.ALWAYS);
+        nametagTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
 
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam("namedMobs");
+            if (team == null) return;
+            for (World world : Bukkit.getWorlds()) {
+                for (Entity entity : world.getEntities()) {
+                    if (entity instanceof Player) continue;
+                    String entry = entity.getUniqueId().toString();
+                    if (entity.getCustomName() != null && !team.hasEntry(entry)) {
+                        team.addEntry(entry);
+                    }
+                }
+            }
+        }, 0L, 100L);
 
     }
 
