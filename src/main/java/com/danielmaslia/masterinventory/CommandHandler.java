@@ -7,12 +7,10 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.ChatColor;
@@ -21,13 +19,11 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
     private final InventoryManager inventoryManager;
     private final ChatManager chatManager;
     private final CSVExporter csvExporter;
-    private final EventListener eventListener;
 
-    public CommandHandler(InventoryManager inventoryManager, ChatManager chatManager, CSVExporter csvExporter, EventListener eventListener) {
+    public CommandHandler(InventoryManager inventoryManager, ChatManager chatManager, CSVExporter csvExporter) {
         this.inventoryManager = inventoryManager;
         this.chatManager = chatManager;
         this.csvExporter = csvExporter;
-        this.eventListener = eventListener;
     }
 
     @Override
@@ -183,20 +179,6 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             } else {
                 player.sendMessage(ChatColor.YELLOW + "Chunk not found: " + ChatColor.GRAY + chunk.getX() + ", " + chunk.getZ());
             }
-            return true;
-        }
-
-        if (cmd.getName().equals("addmobs") && sender instanceof Player player) {
-            int count = 0;
-            for (World world : Bukkit.getWorlds()) {
-                for (LivingEntity entity : world.getLivingEntities()) {
-                    if (entity.getCustomName() != null && !(entity instanceof Player)) {
-                        eventListener.nameEntity(entity, entity.getCustomName());
-                        count++;
-                    }
-                }
-            }
-            player.sendMessage(ChatColor.GREEN + "Added " + count + " named mobs to tracking.");
             return true;
         }
 

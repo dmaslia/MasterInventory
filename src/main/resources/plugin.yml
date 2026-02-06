@@ -24,6 +24,3 @@ commands:
   p:
     description: takes player out of chat session
     usage: /p [chat]
-  addmobs:
-    description: registers all named mobs for tracking
-    usage: /addmobs
