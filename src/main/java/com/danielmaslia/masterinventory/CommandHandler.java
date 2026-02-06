@@ -132,7 +132,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         
         if (cmd.getName().equals("remind") && sender instanceof Player player) {
             if (args.length < 2) {
-                player.sendMessage(ChatColor.RED + "Usage: /remind <reminder_name> [timer] <description");
+                player.sendMessage(ChatColor.RED + "Usage: /remind <reminder_name> [timer] <description>");
                 return true;
             }
             long dispatchTime;
