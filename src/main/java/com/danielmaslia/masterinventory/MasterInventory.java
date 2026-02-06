@@ -39,7 +39,7 @@ public final class MasterInventory extends JavaPlugin {
         inventoryManager = new InventoryManager(csvExporter, worldArea, netherArea, endArea);
         chatManager = new ChatManager(this);
         eventListener = new EventListener(this, inventoryManager, chatManager);
-        commandHandler = new CommandHandler(inventoryManager, chatManager, csvExporter);
+        commandHandler = new CommandHandler(inventoryManager, chatManager, csvExporter, eventListener);
 
         getServer().getPluginManager().registerEvents(eventListener, this);
         getCommand("getinv").setExecutor(commandHandler);
@@ -50,7 +50,7 @@ public final class MasterInventory extends JavaPlugin {
         getCommand("remove").setExecutor(commandHandler);
         getCommand("remind").setTabCompleter(commandHandler);
         getCommand("p").setExecutor(commandHandler);
-
+        getCommand("addmobs").setExecutor(commandHandler);
 
         // automatic inventory counting
         Bukkit.getScheduler().runTaskTimer(this, () -> {

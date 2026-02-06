@@ -37,7 +37,7 @@ public class EventListener implements Listener {
     }
     
     public void nameEntity(Entity entity, String name) {
-        entity.setCustomName(name);
+        entity.setCustomName("§f" + name);
         entity.setCustomNameVisible(true);
         entity.setMetadata("name", new FixedMetadataValue(plugin, name));
     }
