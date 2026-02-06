@@ -1,9 +1,5 @@
 package com.danielmaslia.masterinventory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,16 +7,11 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
-import org.bukkit.entity.Villager.Profession;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.MerchantRecipe;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -191,72 +182,6 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (cmd.getName().equalsIgnoreCase("fixvillagers") && sender instanceof Player player) {
-            File tradesFile = new File(MasterInventory.getPlugin().getDataFolder(), "trades.csv");
-            if (!tradesFile.exists()) {
-                player.sendMessage(ChatColor.RED + "trades.csv not found in plugin data folder");
-                return true;
-            }
-
-            List<String[]> tradeEntries = new ArrayList<>();
-            try (BufferedReader reader = new BufferedReader(new FileReader(tradesFile))) {
-                reader.readLine(); // skip header
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] parts = parseCSVLine(line);
-                    if (parts.length >= 4) {
-                        tradeEntries.add(parts);
-                    }
-                }
-            } catch (IOException e) {
-                player.sendMessage(ChatColor.RED + "Error reading trades.csv: " + e.getMessage());
-                return true;
-            }
-
-            int fixed = 0;
-            int unmatched = 0;
-            for (World world : Bukkit.getWorlds()) {
-                for (Villager v : world.getEntitiesByClass(Villager.class)) {
-                    if (v.getProfession() == Profession.NONE || v.getProfession() == Profession.NITWIT) continue;
-
-                    String profName = v.getProfession().name();
-                    List<MerchantRecipe> recipes = new ArrayList<>(v.getRecipes());
-                    boolean modified = false;
-
-                    for (MerchantRecipe recipe : recipes) {
-                        String resultName = recipe.getResult().getType().name();
-                        List<String> ingredientNames = new ArrayList<>();
-                        for (ItemStack ingredient : recipe.getIngredients()) {
-                            ingredientNames.add(ingredient.getType().name());
-                        }
-
-                        int maxUses = findMaxUses(tradeEntries, profName, ingredientNames, resultName);
-                        if (maxUses != -1) {
-                            if (recipe.getMaxUses() != maxUses) {
-                                recipe.setMaxUses(maxUses);
-                                modified = true;
-                                fixed++;
-                            }
-                        } else {
-                            player.sendMessage(ChatColor.YELLOW + "Unmatched: " + profName
-                                    + " | " + String.join(" + ", ingredientNames)
-                                    + " -> " + resultName
-                                    + " (maxUses=" + recipe.getMaxUses() + ")");
-                            unmatched++;
-                        }
-                    }
-
-                    if (modified) {
-                        v.setRecipes(recipes);
-                    }
-                }
-            }
-
-            player.sendMessage(ChatColor.GREEN + "Fixed " + fixed + " trades. "
-                    + ChatColor.YELLOW + unmatched + " unmatched.");
-            return true;
-        }
-
         if(cmd.getName().equals("p") && sender instanceof Player player) {
             if(!chatManager.isOn()) {
                 player.sendMessage(ChatColor.RED + "No chat session active");
@@ -272,70 +197,5 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         }
 
         return false;
-    }
-
-    private static String[] parseCSVLine(String line) {
-        List<String> fields = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        boolean inQuotes = false;
-        for (char c : line.toCharArray()) {
-            if (c == '"') {
-                inQuotes = !inQuotes;
-            } else if (c == ',' && !inQuotes) {
-                fields.add(current.toString().trim());
-                current.setLength(0);
-            } else {
-                current.append(c);
-            }
-        }
-        fields.add(current.toString().trim());
-        return fields.toArray(new String[0]);
-    }
-
-    private static String normalizeItemName(String csvName) {
-        return switch (csvName) {
-            case "BOTTLE_O_ENCHANTING" -> "EXPERIENCE_BOTTLE";
-            case "ENCHANTED_BOW" -> "BOW";
-            case "ENCHANTED_CROSSBOW" -> "CROSSBOW";
-            default -> csvName;
-        };
-    }
-
-    private static boolean materialsMatch(String csvName, String actualName) {
-        String normalized = normalizeItemName(csvName);
-        if (normalized.equals(actualName)) return true;
-        if (normalized.equals("BOAT") && actualName.endsWith("_BOAT")) return true;
-        return false;
-    }
-
-    private static int findMaxUses(List<String[]> tradeEntries, String profession,
-                                    List<String> ingredientNames, String resultName) {
-        for (String[] entry : tradeEntries) {
-            String csvProfession = entry[0];
-            String csvRequired = entry[1];
-            String csvOffered = entry[2];
-            int csvMaxUses = Integer.parseInt(entry[3]);
-
-            if (!csvProfession.equals(profession)) continue;
-            if (!materialsMatch(csvOffered, resultName)) continue;
-
-            String[] csvIngredients = csvRequired.split(",");
-            for (int i = 0; i < csvIngredients.length; i++) {
-                csvIngredients[i] = csvIngredients[i].trim();
-            }
-
-            if (csvIngredients.length != ingredientNames.size()) continue;
-
-            boolean match = true;
-            for (int i = 0; i < csvIngredients.length; i++) {
-                if (!materialsMatch(csvIngredients[i], ingredientNames.get(i))) {
-                    match = false;
-                    break;
-                }
-            }
-
-            if (match) return csvMaxUses;
-        }
-        return -1;
     }
 }
