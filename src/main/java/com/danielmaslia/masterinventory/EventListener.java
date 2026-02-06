@@ -1,8 +1,11 @@
 package com.danielmaslia.masterinventory;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.Villager.Profession;
@@ -13,7 +16,11 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.UUID;
@@ -27,6 +34,12 @@ public class EventListener implements Listener {
         this.plugin = plugin;
         this.inventoryManager = inventoryManager;
         this.chatManager = chatManager;
+    }
+    
+    public void nameEntity(Entity entity, String name) {
+        entity.setCustomName(name);
+        entity.setCustomNameVisible(true);
+        entity.setMetadata("name", new FixedMetadataValue(plugin, name));
     }
 
     @EventHandler
@@ -42,6 +55,22 @@ public class EventListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         inventoryManager.savePlayerInventory(event.getPlayer());
         chatManager.removeFromConversation(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onPlayerNameTag(PlayerInteractEntityEvent event) {
+        Player player = event.getPlayer();
+        
+        ItemStack item = (event.getHand() == EquipmentSlot.HAND)
+                ? player.getInventory().getItemInMainHand()
+                : player.getInventory().getItemInOffHand();
+        
+        if (item.getType() == Material.NAME_TAG && event.getRightClicked() instanceof LivingEntity entity) {
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null && meta.hasDisplayName()) {
+                nameEntity(entity, meta.getDisplayName());
+            }
+        }
     }
 
     @EventHandler
