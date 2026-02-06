@@ -128,8 +128,12 @@ public class InventoryManager {
             }
         }
 
-        countsLarge.forEach((material, amount) -> {
-            counts.merge(material, amount / 2, Integer::sum);
+        countsLarge.forEach((key, amount) -> {
+            if (key.id() != null && !key.material().name().endsWith("SHULKER_BOX")) {
+                counts.merge(key, amount, Integer::sum);
+            } else {
+                counts.merge(key, amount / 2, Integer::sum);
+            }
         });
 
         csvExporter.saveInvToCSV(counts, "scan_results.csv");
