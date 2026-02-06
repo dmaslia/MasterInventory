@@ -191,7 +191,8 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             for (World world : Bukkit.getWorlds()) {
                 for (LivingEntity entity : world.getLivingEntities()) {
                     if (entity.getCustomName() != null && !(entity instanceof Player)) {
-                        eventListener.nameEntity(entity, ChatColor.stripColor(entity.getCustomName()));
+                        entity.setCustomName(null);
+                        entity.setCustomNameVisible(false);
                         count++;
                     }
                 }
