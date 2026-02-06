@@ -37,7 +37,7 @@ public class EventListener implements Listener {
     }
     
     public void nameEntity(Entity entity, String name) {
-        entity.setCustomName("§b§l" + name);
+        entity.setCustomName(org.bukkit.ChatColor.AQUA + "" + org.bukkit.ChatColor.BOLD + name);
         entity.setCustomNameVisible(true);
         entity.setMetadata("name", new FixedMetadataValue(plugin, name));
     }
