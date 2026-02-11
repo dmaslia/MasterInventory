@@ -32,6 +32,7 @@ public class EventListener implements Listener {
     private final JavaPlugin plugin;
     private final InventoryManager inventoryManager;
     private final ChatManager chatManager;
+    private static boolean resetting = false;
 
     public EventListener(JavaPlugin plugin, InventoryManager inventoryManager, ChatManager chatManager) {
         this.plugin = plugin;
@@ -99,32 +100,39 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onVillagerReplenish(VillagerReplenishTradeEvent event) {
-        event.setCancelled(true);
+        if (!resetting) {
+            event.setCancelled(true);
+        }
     }
 
     public static void resetVillagers() {
-        for (World world : Bukkit.getWorlds()) {
-            long time = world.getTime();
-            if (time < 0 || time > 12000) {
-                continue;
-            }
+        resetting = true;
+        try {
+            for (World world : Bukkit.getWorlds()) {
+                long time = world.getTime();
+                if (time < 0 || time > 12000) {
+                    continue;
+                }
 
-            for (Villager v : world.getEntitiesByClass(Villager.class)) {
-                if (v.getProfession() != Profession.NONE && v.getProfession() != Profession.NITWIT && !v.isSleeping()) {
-                    java.util.List<MerchantRecipe> recipes = new java.util.ArrayList<>(v.getRecipes());
-                    for (MerchantRecipe recipe : recipes) {
-                        recipe.setUses(0);
-                        recipe.setExperienceReward(false);
-                        recipe.setDemand(0);
-                    }
-                    v.setRecipes(recipes);
+                for (Villager v : world.getEntitiesByClass(Villager.class)) {
+                    if (v.getProfession() != Profession.NONE && v.getProfession() != Profession.NITWIT && !v.isSleeping()) {
+                        java.util.List<MerchantRecipe> recipes = new java.util.ArrayList<>(v.getRecipes());
+                        for (MerchantRecipe recipe : recipes) {
+                            recipe.setUses(0);
+                            recipe.setExperienceReward(false);
+                            recipe.setDemand(0);
+                        }
+                        v.setRecipes(recipes);
 
-                    Sound workSound = getWorkSound(v.getProfession());
-                    if (workSound != null) {
-                        world.playSound(v.getLocation(), workSound, 1.0f, 1.0f);
+                        Sound workSound = getWorkSound(v.getProfession());
+                        if (workSound != null) {
+                            world.playSound(v.getLocation(), workSound, 1.0f, 1.0f);
+                        }
                     }
                 }
             }
+        } finally {
+            resetting = false;
         }
     }
 
