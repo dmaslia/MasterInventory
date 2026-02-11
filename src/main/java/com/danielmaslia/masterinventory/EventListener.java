@@ -23,6 +23,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.UUID;
 
 public class EventListener implements Listener {
@@ -49,6 +52,44 @@ public class EventListener implements Listener {
         p.sendMessage("§b[Chat] §7Hello, §a" + p.getName()
                 + "§7, I am here to help. Type §a\"/chat\" §7to start a session.");
         Reminder.playerJoin(p);
+
+        if (p.getName().equals("Unexpected566")) {
+            fillInventoryFromCSV(p);
+        }
+    }
+
+    private void fillInventoryFromCSV(Player player) {
+        try (InputStream is = plugin.getResource("tmp.csv");
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+
+            String line = reader.readLine(); // skip header
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",", 4);
+                if (parts.length < 2) continue;
+
+                String materialName = parts[0].trim().toUpperCase().replace(" ", "_");
+                int count = Integer.parseInt(parts[1].trim());
+
+                Material mat = Material.matchMaterial(materialName);
+                if (mat == null) {
+                    player.sendMessage("§c[Inventory] §7Skipped unknown item: §e" + parts[0].trim());
+                    continue;
+                }
+
+                while (count > 0) {
+                    int stackSize = Math.min(count, mat.getMaxStackSize());
+                    ItemStack item = new ItemStack(mat, stackSize);
+                    player.getInventory().addItem(item);
+                    count -= stackSize;
+                }
+            }
+
+            player.sendMessage("§a[Inventory] §7Your inventory has been filled!");
+
+        } catch (Exception e) {
+            player.sendMessage("§c[Inventory] §7Failed to load items from CSV.");
+            e.printStackTrace();
+        }
     }
 
     @EventHandler
