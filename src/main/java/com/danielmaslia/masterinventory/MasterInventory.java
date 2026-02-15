@@ -33,6 +33,7 @@ public final class MasterInventory extends JavaPlugin {
         getLogger().info("MasterInventory is Starting Auto Save");
         getLogger().info("-----------------------------------");
 
+        saveDefaultConfig();
         Reminder.loadReminders(getDataFolder());
 
         CSVExporter csvExporter = new CSVExporter(getDataFolder(), getLogger());
@@ -51,6 +52,7 @@ public final class MasterInventory extends JavaPlugin {
         getCommand("remind").setTabCompleter(commandHandler);
         getCommand("p").setExecutor(commandHandler);
         getCommand("addmobs").setExecutor(commandHandler);
+        getCommand("add_world").setExecutor(commandHandler);
 
         // automatic inventory counting
         Bukkit.getScheduler().runTaskTimer(this, () -> {

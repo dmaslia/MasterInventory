@@ -15,6 +15,7 @@ import org.bukkit.event.entity.VillagerReplenishTradeEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -23,9 +24,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.Location;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class EventListener implements Listener {
@@ -34,10 +39,82 @@ public class EventListener implements Listener {
     private final ChatManager chatManager;
     private static boolean resetting = false;
 
+    private final Map<UUID, String> pendingPortalLinks = new HashMap<>();
+    private final List<PortalLink> portalLinks = new ArrayList<>();
+
+    private record PortalLink(String world, int x, int y, int z, String targetWorld) {
+        boolean isNear(Location loc, int radius) {
+            return loc.getWorld() != null
+                    && loc.getWorld().getName().equals(world)
+                    && Math.abs(loc.getBlockX() - x) <= radius
+                    && Math.abs((loc.getBlockY() + 1) - y) <= radius
+                    && Math.abs(loc.getBlockZ() - z) <= radius;
+        }
+    }
+
     public EventListener(JavaPlugin plugin, InventoryManager inventoryManager, ChatManager chatManager) {
         this.plugin = plugin;
         this.inventoryManager = inventoryManager;
         this.chatManager = chatManager;
+        loadPortals();
+    }
+
+    private void loadPortals() {
+        portalLinks.clear();
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("portals");
+        if (section == null) return;
+        for (String key : section.getKeys(false)) {
+            ConfigurationSection p = section.getConfigurationSection(key);
+            if (p == null) continue;
+            portalLinks.add(new PortalLink(
+                    p.getString("world"),
+                    p.getInt("x"),
+                    p.getInt("y"),
+                    p.getInt("z"),
+                    p.getString("target_world")
+            ));
+        }
+    }
+
+    public void addPendingPortal(UUID player, String worldName) {
+        pendingPortalLinks.put(player, worldName);
+    }
+
+    @EventHandler
+    public void onPlayerPortal(PlayerPortalEvent event) {
+        Player player = event.getPlayer();
+        Location from = event.getFrom();
+        Location headLevel = from.clone().add(0, 1, 0);
+
+        if (pendingPortalLinks.containsKey(player.getUniqueId())) {
+            event.setCancelled(true);
+            String targetWorld = pendingPortalLinks.remove(player.getUniqueId());
+            int x = headLevel.getBlockX();
+            int y = headLevel.getBlockY();
+            int z = headLevel.getBlockZ();
+            String worldName = from.getWorld().getName();
+
+            String key = targetWorld.replace(" ", "_");
+            plugin.getConfig().set("portals." + key + ".world", worldName);
+            plugin.getConfig().set("portals." + key + ".x", x);
+            plugin.getConfig().set("portals." + key + ".y", y);
+            plugin.getConfig().set("portals." + key + ".z", z);
+            plugin.getConfig().set("portals." + key + ".target_world", targetWorld);
+            plugin.saveConfig();
+
+            portalLinks.add(new PortalLink(worldName, x, y, z, targetWorld));
+            player.sendMessage("§aPortal linked to world: §f" + targetWorld);
+            return;
+        }
+
+        for (PortalLink link : portalLinks) {
+            if (link.isNear(headLevel, 2)) {
+                event.setCancelled(true);
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                        "wm teleport " + link.targetWorld() + " " + player.getName());
+                return;
+            }
+        }
     }
     
     public void nameEntity(Entity entity, String name) {

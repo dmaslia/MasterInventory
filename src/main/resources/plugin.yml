@@ -27,3 +27,6 @@ commands:
   addmobs:
     description: registers all named mobs for tracking
     usage: /addmobs
+  add_world:
+    description: links a portal to a world teleport
+    usage: /add_world <world_name>

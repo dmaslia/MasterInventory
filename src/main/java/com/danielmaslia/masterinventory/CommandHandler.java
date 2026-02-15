@@ -200,6 +200,17 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (cmd.getName().equals("add_world") && sender instanceof Player player) {
+            if (args.length < 1) {
+                player.sendMessage(ChatColor.RED + "Usage: /add_world <world_name>");
+                return true;
+            }
+            String worldName = String.join(" ", args);
+            eventListener.addPendingPortal(player.getUniqueId(), worldName);
+            player.sendMessage("§aEnter a portal to link it to: §f" + worldName);
+            return true;
+        }
+
         if(cmd.getName().equals("p") && sender instanceof Player player) {
             if(!chatManager.isOn()) {
                 player.sendMessage(ChatColor.RED + "No chat session active");
