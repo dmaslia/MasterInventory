@@ -199,6 +199,8 @@ public class EventListener implements Listener {
             if (tpCoords != null) {
                 // Manual tp coords provided, save them and skip portal building
                 saveTpLocation(key, targetWorld, tpCoords[0], tpCoords[1], tpCoords[2]);
+                World new_world = Bukkit.getWorld(worldName);
+                new_world.setSpawnLocation(new Location(new_world, tpCoords[0], tpCoords[1], tpCoords[2]));
             } else {
                 Location loc = Bukkit.getWorld(worldName).getSpawnLocation();
                 tpCoords = new int []{(int) loc.getX(), (int) loc.getY(), (int) loc.getZ()};
