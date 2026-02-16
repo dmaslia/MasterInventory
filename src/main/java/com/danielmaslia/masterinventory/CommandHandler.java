@@ -213,26 +213,42 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
         if (cmd.getName().equals("add_world") && sender instanceof Player player) {
             if (args.length < 1) {
-                player.sendMessage(ChatColor.RED + "Usage: /add_world <world_name> [gamemode]");
+                player.sendMessage(ChatColor.RED + "Usage: /add_world <world_name> [x y z] [gamemode]");
                 return true;
             }
-            // Check if last argument is a valid gamemode
-            String lastArg = args[args.length - 1].toUpperCase();
+            // Parse from the end: check gamemode, then check coords
+            int end = args.length;
             String gameMode = null;
-            String worldName;
+            int[] tpCoords = null;
+
+            // Check if last argument is a valid gamemode
             try {
-                org.bukkit.GameMode.valueOf(lastArg);
-                gameMode = lastArg;
-                worldName = String.join(" ", java.util.Arrays.copyOfRange(args, 0, args.length - 1));
-            } catch (IllegalArgumentException e) {
-                worldName = String.join(" ", args);
+                org.bukkit.GameMode.valueOf(args[end - 1].toUpperCase());
+                gameMode = args[end - 1].toUpperCase();
+                end--;
+            } catch (IllegalArgumentException ignored) {}
+
+            // Check if the last 3 remaining args are coordinates
+            if (end >= 4) {
+                try {
+                    int tx = Integer.parseInt(args[end - 3]);
+                    int ty = Integer.parseInt(args[end - 2]);
+                    int tz = Integer.parseInt(args[end - 1]);
+                    tpCoords = new int[]{tx, ty, tz};
+                    end -= 3;
+                } catch (NumberFormatException ignored) {}
             }
+
+            String worldName = String.join(" ", java.util.Arrays.copyOfRange(args, 0, end));
             if (worldName.isEmpty()) {
-                player.sendMessage(ChatColor.RED + "Usage: /add_world <world_name> [gamemode]");
+                player.sendMessage(ChatColor.RED + "Usage: /add_world <world_name> [x y z] [gamemode]");
                 return true;
             }
-            eventListener.addPendingPortal(player.getUniqueId(), worldName, gameMode);
+            eventListener.addPendingPortal(player.getUniqueId(), worldName, gameMode, tpCoords);
             String msg = "§aEnter a portal to link it to: §f" + worldName;
+            if (tpCoords != null) {
+                msg += " §7(tp: " + tpCoords[0] + ", " + tpCoords[1] + ", " + tpCoords[2] + ")";
+            }
             if (gameMode != null) {
                 msg += " §7(gamemode: " + gameMode.toLowerCase() + ")";
             }

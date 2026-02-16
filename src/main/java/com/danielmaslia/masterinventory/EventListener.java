@@ -48,12 +48,13 @@ public class EventListener implements Listener {
     private final ChatManager chatManager;
     private static boolean resetting = false;
 
-    private record PendingLink(String worldName, String gameMode) {}
+    private record PendingLink(String worldName, String gameMode, int[] tpCoords) {}
     private final Map<UUID, PendingLink> pendingPortalLinks = new HashMap<>();
     private final List<PortalLink> portalLinks = new ArrayList<>();
     private final Set<String> linkedWorlds = new HashSet<>();
 
-    private record PortalLink(String configKey, String world, int x, int y, int z, String targetWorld, String gameMode) {
+    private record PortalLink(String configKey, String world, int x, int y, int z, String targetWorld, String gameMode,
+                               String tpWorld, int tpX, int tpY, int tpZ) {
         boolean isNear(Location loc, int radius) {
             return loc.getWorld() != null
                     && loc.getWorld().getName().equals(world)
@@ -86,18 +87,34 @@ public class EventListener implements Listener {
                     p.getInt("y"),
                     p.getInt("z"),
                     targetWorld,
-                    p.getString("gamemode")
+                    p.getString("gamemode"),
+                    p.getString("tp_world"),
+                    p.getInt("tp_x"),
+                    p.getInt("tp_y"),
+                    p.getInt("tp_z")
             ));
             linkedWorlds.add(targetWorld);
         }
     }
 
-    public void addPendingPortal(UUID player, String worldName, String gameMode) {
-        pendingPortalLinks.put(player, new PendingLink(worldName, gameMode));
+    public void addPendingPortal(UUID player, String worldName, String gameMode, int[] tpCoords) {
+        pendingPortalLinks.put(player, new PendingLink(worldName, gameMode, tpCoords));
     }
 
     public void addPendingRemoval(UUID player) {
-        pendingPortalLinks.put(player, new PendingLink("__remove__", null));
+        pendingPortalLinks.put(player, new PendingLink("__remove__", null, null));
+    }
+
+    public Location getTpLocation(String targetWorld) {
+        for (PortalLink link : portalLinks) {
+            if (link.targetWorld().equalsIgnoreCase(targetWorld) && link.tpWorld() != null) {
+                World world = Bukkit.getWorld(link.tpWorld());
+                if (world != null) {
+                    return new Location(world, link.tpX() + 0.5, link.tpY(), link.tpZ() + 0.5);
+                }
+            }
+        }
+        return null;
     }
 
     public Location getPortalLocation(String targetWorld) {
@@ -176,10 +193,18 @@ public class EventListener implements Listener {
             }
             plugin.saveConfig();
 
-            portalLinks.add(new PortalLink(key, worldName, x, y, z, targetWorld, gameMode));
             linkedWorlds.add(targetWorld);
             player.sendMessage("§aPortal linked to world: §f" + targetWorld);
-            buildPortalAtSpawn(targetWorld);
+            int[] tpCoords = pending.tpCoords();
+            if (tpCoords != null) {
+                // Manual tp coords provided, save them and skip portal building
+                saveTpLocation(key, targetWorld, tpCoords[0], tpCoords[1], tpCoords[2]);
+            } else {
+                Location loc = Bukkit.getWorld(worldName).getSpawnLocation();
+                tpCoords = new int []{(int) loc.getX(), (int) loc.getY(), (int) loc.getZ()};
+            }
+            portalLinks.add(new PortalLink(key, worldName, x, y, z, targetWorld, gameMode,
+                    targetWorld, tpCoords[0], tpCoords[1], tpCoords[2]));
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
                     "wm teleport " + targetWorld + " " + player.getName());
             return;
@@ -209,51 +234,12 @@ public class EventListener implements Listener {
     
     // --- Portal building ---
 
-    private void buildPortalAtSpawn(String worldName) {
-        World world = Bukkit.getWorld(worldName);
-        if (world == null) return;
-
-        Location spawn = world.getSpawnLocation();
-        int sx = spawn.getBlockX();
-        int sy = spawn.getBlockY();
-        int sz = spawn.getBlockZ();
-
-        // Check if a portal already exists nearby (within 5 blocks of spawn)
-        for (int dx = -5; dx <= 5; dx++) {
-            for (int dy = -5; dy <= 5; dy++) {
-                for (int dz = -5; dz <= 5; dz++) {
-                    Block block = world.getBlockAt(sx + dx, sy + dy, sz + dz);
-                    if (block.getType() == Material.NETHER_PORTAL) {
-                        return; // Portal already exists near spawn
-                    }
-                }
-            }
-        }
-
-        // Build a 4-wide x 5-tall portal frame, 2 blocks in front of spawn
-        // Bottom obsidian row sits at ground level (sy), portal interior starts at sy+1
-        int px = sx + 2;
-        int py = sy;
-        int pz = sz;
-
-        // Clear the interior space first so portal blocks can form
-        for (int y = py; y < py + 5; y++) {
-            for (int x = px; x < px + 4; x++) {
-                boolean isEdge = (y == py || y == py + 4 || x == px || x == px + 3);
-                if (isEdge) {
-                    world.getBlockAt(x, y, pz).setType(Material.OBSIDIAN);
-                } else {
-                    world.getBlockAt(x, y, pz).setType(Material.AIR);
-                }
-            }
-        }
-
-        // Fill interior with portal blocks (2 wide x 3 tall)
-        for (int y = py + 1; y < py + 4; y++) {
-            for (int x = px + 1; x < px + 3; x++) {
-                world.getBlockAt(x, y, pz).setType(Material.NETHER_PORTAL);
-            }
-        }
+    private void saveTpLocation(String configKey, String tpWorld, int tpX, int tpY, int tpZ) {
+        plugin.getConfig().set("portals." + configKey + ".tp_world", tpWorld);
+        plugin.getConfig().set("portals." + configKey + ".tp_x", tpX);
+        plugin.getConfig().set("portals." + configKey + ".tp_y", tpY);
+        plugin.getConfig().set("portals." + configKey + ".tp_z", tpZ);
+        plugin.saveConfig();
     }
 
     // --- World-specific inventory management ---
