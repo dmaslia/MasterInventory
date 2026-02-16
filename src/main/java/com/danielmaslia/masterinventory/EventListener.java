@@ -281,6 +281,9 @@ public class EventListener implements Listener {
         config.set(key + ".offhand", inv.getItemInOffHand());
         config.set(key + ".xp_level", player.getLevel());
         config.set(key + ".xp_exp", (double) player.getExp());
+        config.set(key + ".health", player.getHealth());
+        config.set(key + ".hunger", player.getFoodLevel());
+        config.set(key + ".saturation", (double) player.getSaturation());
 
         try {
             config.save(file);
@@ -297,6 +300,9 @@ public class EventListener implements Listener {
         inv.clear();
         player.setLevel(0);
         player.setExp(0);
+        player.setHealth(20.0);
+        player.setFoodLevel(20);
+        player.setSaturation(5.0f);
 
         if (!config.contains(key)) {
             return;
@@ -315,6 +321,9 @@ public class EventListener implements Listener {
         if (offhand != null) inv.setItemInOffHand(offhand);
         player.setLevel(config.getInt(key + ".xp_level", 0));
         player.setExp((float) config.getDouble(key + ".xp_exp", 0.0));
+        player.setHealth(config.getDouble(key + ".health", 20.0));
+        player.setFoodLevel(config.getInt(key + ".hunger", 20));
+        player.setSaturation((float) config.getDouble(key + ".saturation", 5.0));
     }
 
     @EventHandler
