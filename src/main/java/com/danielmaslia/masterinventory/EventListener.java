@@ -128,6 +128,7 @@ public class EventListener implements Listener {
                 }
                 if (toRemove != null) {
                     String oldKey = toRemove.targetWorld().replace(" ", "_");
+                    plugin.reloadConfig();
                     plugin.getConfig().set("portals." + oldKey, null);
                     plugin.saveConfig();
                     portalLinks.remove(toRemove);
