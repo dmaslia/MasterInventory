@@ -128,6 +128,8 @@ public class EventListener implements Listener {
             portalLinks.add(new PortalLink(worldName, x, y, z, targetWorld));
             linkedWorlds.add(targetWorld);
             player.sendMessage("§aPortal linked to world: §f" + targetWorld);
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                    "wm teleport " + targetWorld + " " + player.getName());
             return;
         }
 
