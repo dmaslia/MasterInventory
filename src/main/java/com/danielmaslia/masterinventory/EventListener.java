@@ -98,7 +98,7 @@ public class EventListener implements Listener {
 
     public Location getPortalLocation(String targetWorld) {
         for (PortalLink link : portalLinks) {
-            if (link.targetWorld().equals(targetWorld)) {
+            if (link.targetWorld().equalsIgnoreCase(targetWorld)) {
                 World world = Bukkit.getWorld(link.world());
                 if (world != null) {
                     return new Location(world, link.x() + 0.5, link.y() - 1, link.z() + 0.5);
