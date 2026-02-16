@@ -33,3 +33,6 @@ commands:
   exit:
     description: teleports back to the main world portal
     usage: /exit
+  remove_world:
+    description: unlinks a portal from a world teleport
+    usage: /remove_world <world_name>

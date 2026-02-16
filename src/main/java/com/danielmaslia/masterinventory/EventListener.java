@@ -91,6 +91,24 @@ public class EventListener implements Listener {
         pendingPortalLinks.put(player, worldName);
     }
 
+    public boolean removePortal(String targetWorld) {
+        PortalLink toRemove = null;
+        for (PortalLink link : portalLinks) {
+            if (link.targetWorld().equals(targetWorld)) {
+                toRemove = link;
+                break;
+            }
+        }
+        if (toRemove == null) return false;
+
+        portalLinks.remove(toRemove);
+        linkedWorlds.remove(targetWorld);
+        String key = targetWorld.replace(" ", "_");
+        plugin.getConfig().set("portals." + key, null);
+        plugin.saveConfig();
+        return true;
+    }
+
     public Location getPortalLocation(String targetWorld) {
         for (PortalLink link : portalLinks) {
             if (link.targetWorld().equals(targetWorld)) {
@@ -116,6 +134,21 @@ public class EventListener implements Listener {
             int y = headLevel.getBlockY();
             int z = headLevel.getBlockZ();
             String worldName = from.getWorld().getName();
+
+            // Remove existing link at this portal location if any
+            PortalLink existing = null;
+            for (PortalLink link : portalLinks) {
+                if (link.isNear(headLevel, 2)) {
+                    existing = link;
+                    break;
+                }
+            }
+            if (existing != null) {
+                String oldKey = existing.targetWorld().replace(" ", "_");
+                plugin.getConfig().set("portals." + oldKey, null);
+                portalLinks.remove(existing);
+                linkedWorlds.remove(existing.targetWorld());
+            }
 
             String key = targetWorld.replace(" ", "_");
             plugin.getConfig().set("portals." + key + ".world", worldName);

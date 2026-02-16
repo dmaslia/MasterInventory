@@ -222,6 +222,20 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (cmd.getName().equals("remove_world") && sender instanceof Player player) {
+            if (args.length < 1) {
+                player.sendMessage(ChatColor.RED + "Usage: /remove_world <world_name>");
+                return true;
+            }
+            String worldName = String.join(" ", args);
+            if (eventListener.removePortal(worldName)) {
+                player.sendMessage("§aPortal unlinked from world: §f" + worldName);
+            } else {
+                player.sendMessage(ChatColor.RED + "No portal linked to: " + worldName);
+            }
+            return true;
+        }
+
         if(cmd.getName().equals("p") && sender instanceof Player player) {
             if(!chatManager.isOn()) {
                 player.sendMessage(ChatColor.RED + "No chat session active");
