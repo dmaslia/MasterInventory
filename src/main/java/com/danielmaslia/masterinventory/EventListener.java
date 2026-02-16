@@ -29,6 +29,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.Location;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.block.Block;
 
 import java.io.File;
 import java.io.IOException;
@@ -170,6 +171,7 @@ public class EventListener implements Listener {
             portalLinks.add(new PortalLink(key, worldName, x, y, z, targetWorld));
             linkedWorlds.add(targetWorld);
             player.sendMessage("§aPortal linked to world: §f" + targetWorld);
+            buildPortalAtSpawn(targetWorld);
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
                     "wm teleport " + targetWorld + " " + player.getName());
             return;
@@ -183,8 +185,69 @@ public class EventListener implements Listener {
                 return;
             }
         }
+
+        // Reverse teleport: if player is in a linked world, send them back to main world portal
+        String currentWorld = player.getWorld().getName();
+        if (linkedWorlds.contains(currentWorld)) {
+            event.setCancelled(true);
+            Location portalLoc = getPortalLocation(currentWorld);
+            if (portalLoc != null) {
+                player.teleport(portalLoc);
+            } else {
+                player.sendMessage("§cNo linked portal found to return to.");
+            }
+        }
     }
     
+    // --- Portal building ---
+
+    private void buildPortalAtSpawn(String worldName) {
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) return;
+
+        Location spawn = world.getSpawnLocation();
+        int sx = spawn.getBlockX();
+        int sy = spawn.getBlockY();
+        int sz = spawn.getBlockZ();
+
+        // Check if a portal already exists nearby (within 5 blocks of spawn)
+        for (int dx = -5; dx <= 5; dx++) {
+            for (int dy = -5; dy <= 5; dy++) {
+                for (int dz = -5; dz <= 5; dz++) {
+                    Block block = world.getBlockAt(sx + dx, sy + dy, sz + dz);
+                    if (block.getType() == Material.NETHER_PORTAL) {
+                        return; // Portal already exists near spawn
+                    }
+                }
+            }
+        }
+
+        // Build a 4-wide x 5-tall portal frame, 2 blocks in front of spawn
+        // Bottom obsidian row sits at ground level (sy), portal interior starts at sy+1
+        int px = sx + 2;
+        int py = sy;
+        int pz = sz;
+
+        // Clear the interior space first so portal blocks can form
+        for (int y = py; y < py + 5; y++) {
+            for (int x = px; x < px + 4; x++) {
+                boolean isEdge = (y == py || y == py + 4 || x == px || x == px + 3);
+                if (isEdge) {
+                    world.getBlockAt(x, y, pz).setType(Material.OBSIDIAN);
+                } else {
+                    world.getBlockAt(x, y, pz).setType(Material.AIR);
+                }
+            }
+        }
+
+        // Fill interior with portal blocks (2 wide x 3 tall)
+        for (int y = py + 1; y < py + 4; y++) {
+            for (int x = px + 1; x < px + 3; x++) {
+                world.getBlockAt(x, y, pz).setType(Material.NETHER_PORTAL);
+            }
+        }
+    }
+
     // --- World-specific inventory management ---
 
     private static final Set<String> MAIN_WORLDS = Set.of("world", "world_nether", "world_the_end");
