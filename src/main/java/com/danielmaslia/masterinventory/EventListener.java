@@ -91,22 +91,8 @@ public class EventListener implements Listener {
         pendingPortalLinks.put(player, worldName);
     }
 
-    public boolean removePortal(String targetWorld) {
-        PortalLink toRemove = null;
-        for (PortalLink link : portalLinks) {
-            if (link.targetWorld().equals(targetWorld)) {
-                toRemove = link;
-                break;
-            }
-        }
-        if (toRemove == null) return false;
-
-        portalLinks.remove(toRemove);
-        linkedWorlds.remove(targetWorld);
-        String key = targetWorld.replace(" ", "_");
-        plugin.getConfig().set("portals." + key, null);
-        plugin.saveConfig();
-        return true;
+    public void addPendingRemoval(UUID player) {
+        pendingPortalLinks.put(player, "__remove__");
     }
 
     public Location getPortalLocation(String targetWorld) {
@@ -130,6 +116,29 @@ public class EventListener implements Listener {
         if (pendingPortalLinks.containsKey(player.getUniqueId())) {
             event.setCancelled(true);
             String targetWorld = pendingPortalLinks.remove(player.getUniqueId());
+
+            // Handle removal
+            if ("__remove__".equals(targetWorld)) {
+                PortalLink toRemove = null;
+                for (PortalLink link : portalLinks) {
+                    if (link.isNear(headLevel, 2)) {
+                        toRemove = link;
+                        break;
+                    }
+                }
+                if (toRemove != null) {
+                    String oldKey = toRemove.targetWorld().replace(" ", "_");
+                    plugin.getConfig().set("portals." + oldKey, null);
+                    plugin.saveConfig();
+                    portalLinks.remove(toRemove);
+                    linkedWorlds.remove(toRemove.targetWorld());
+                    player.sendMessage("§aPortal unlinked from world: §f" + toRemove.targetWorld());
+                } else {
+                    player.sendMessage("§cNo linked portal found here.");
+                }
+                return;
+            }
+
             int x = headLevel.getBlockX();
             int y = headLevel.getBlockY();
             int z = headLevel.getBlockZ();

@@ -35,4 +35,4 @@ commands:
     usage: /exit
   remove_world:
     description: unlinks a portal from a world teleport
-    usage: /remove_world <world_name>
+    usage: /remove_world
