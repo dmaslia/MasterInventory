@@ -29,6 +29,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.Location;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.GameMode;
 import org.bukkit.block.Block;
 
 import java.io.File;
@@ -47,11 +48,12 @@ public class EventListener implements Listener {
     private final ChatManager chatManager;
     private static boolean resetting = false;
 
-    private final Map<UUID, String> pendingPortalLinks = new HashMap<>();
+    private record PendingLink(String worldName, String gameMode) {}
+    private final Map<UUID, PendingLink> pendingPortalLinks = new HashMap<>();
     private final List<PortalLink> portalLinks = new ArrayList<>();
     private final Set<String> linkedWorlds = new HashSet<>();
 
-    private record PortalLink(String configKey, String world, int x, int y, int z, String targetWorld) {
+    private record PortalLink(String configKey, String world, int x, int y, int z, String targetWorld, String gameMode) {
         boolean isNear(Location loc, int radius) {
             return loc.getWorld() != null
                     && loc.getWorld().getName().equals(world)
@@ -83,18 +85,19 @@ public class EventListener implements Listener {
                     p.getInt("x"),
                     p.getInt("y"),
                     p.getInt("z"),
-                    targetWorld
+                    targetWorld,
+                    p.getString("gamemode")
             ));
             linkedWorlds.add(targetWorld);
         }
     }
 
-    public void addPendingPortal(UUID player, String worldName) {
-        pendingPortalLinks.put(player, worldName);
+    public void addPendingPortal(UUID player, String worldName, String gameMode) {
+        pendingPortalLinks.put(player, new PendingLink(worldName, gameMode));
     }
 
     public void addPendingRemoval(UUID player) {
-        pendingPortalLinks.put(player, "__remove__");
+        pendingPortalLinks.put(player, new PendingLink("__remove__", null));
     }
 
     public Location getPortalLocation(String targetWorld) {
@@ -117,7 +120,9 @@ public class EventListener implements Listener {
 
         if (pendingPortalLinks.containsKey(player.getUniqueId())) {
             event.setCancelled(true);
-            String targetWorld = pendingPortalLinks.remove(player.getUniqueId());
+            PendingLink pending = pendingPortalLinks.remove(player.getUniqueId());
+            String targetWorld = pending.worldName();
+            String gameMode = pending.gameMode();
 
             // Handle removal
             if ("__remove__".equals(targetWorld)) {
@@ -166,9 +171,12 @@ public class EventListener implements Listener {
             plugin.getConfig().set("portals." + key + ".y", y);
             plugin.getConfig().set("portals." + key + ".z", z);
             plugin.getConfig().set("portals." + key + ".target_world", targetWorld);
+            if (gameMode != null) {
+                plugin.getConfig().set("portals." + key + ".gamemode", gameMode);
+            }
             plugin.saveConfig();
 
-            portalLinks.add(new PortalLink(key, worldName, x, y, z, targetWorld));
+            portalLinks.add(new PortalLink(key, worldName, x, y, z, targetWorld, gameMode));
             linkedWorlds.add(targetWorld);
             player.sendMessage("§aPortal linked to world: §f" + targetWorld);
             buildPortalAtSpawn(targetWorld);
@@ -256,6 +264,15 @@ public class EventListener implements Listener {
         return MAIN_WORLDS.contains(worldName);
     }
 
+    private String getWorldGameMode(String worldName) {
+        for (PortalLink link : portalLinks) {
+            if (link.targetWorld().equalsIgnoreCase(worldName)) {
+                return link.gameMode();
+            }
+        }
+        return null;
+    }
+
     private String getInventoryKey(String worldName) {
         return isMainWorld(worldName) ? "main" : worldName;
     }
@@ -284,6 +301,7 @@ public class EventListener implements Listener {
         config.set(key + ".health", player.getHealth());
         config.set(key + ".hunger", player.getFoodLevel());
         config.set(key + ".saturation", (double) player.getSaturation());
+        config.set(key + ".gamemode", player.getGameMode().name());
 
         try {
             config.save(file);
@@ -343,6 +361,24 @@ public class EventListener implements Listener {
 
         saveWorldInventory(player, fromKey);
         loadWorldInventory(player, toKey);
+
+        // Apply gamemode: use configured world gamemode, or restore saved gamemode
+        String configuredGameMode = getWorldGameMode(toWorld);
+        if (configuredGameMode != null) {
+            try {
+                player.setGameMode(GameMode.valueOf(configuredGameMode.toUpperCase()));
+            } catch (IllegalArgumentException ignored) {}
+        } else {
+            // Restore the gamemode the player had when they were last in this world
+            File file = getInventoryFile(player.getUniqueId());
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+            String savedMode = config.getString(toKey + ".gamemode");
+            if (savedMode != null) {
+                try {
+                    player.setGameMode(GameMode.valueOf(savedMode));
+                } catch (IllegalArgumentException ignored) {}
+            }
+        }
     }
 
     public void nameEntity(Entity entity, String name) {

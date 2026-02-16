@@ -213,12 +213,30 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
         if (cmd.getName().equals("add_world") && sender instanceof Player player) {
             if (args.length < 1) {
-                player.sendMessage(ChatColor.RED + "Usage: /add_world <world_name>");
+                player.sendMessage(ChatColor.RED + "Usage: /add_world <world_name> [gamemode]");
                 return true;
             }
-            String worldName = String.join(" ", args);
-            eventListener.addPendingPortal(player.getUniqueId(), worldName);
-            player.sendMessage("§aEnter a portal to link it to: §f" + worldName);
+            // Check if last argument is a valid gamemode
+            String lastArg = args[args.length - 1].toUpperCase();
+            String gameMode = null;
+            String worldName;
+            try {
+                org.bukkit.GameMode.valueOf(lastArg);
+                gameMode = lastArg;
+                worldName = String.join(" ", java.util.Arrays.copyOfRange(args, 0, args.length - 1));
+            } catch (IllegalArgumentException e) {
+                worldName = String.join(" ", args);
+            }
+            if (worldName.isEmpty()) {
+                player.sendMessage(ChatColor.RED + "Usage: /add_world <world_name> [gamemode]");
+                return true;
+            }
+            eventListener.addPendingPortal(player.getUniqueId(), worldName, gameMode);
+            String msg = "§aEnter a portal to link it to: §f" + worldName;
+            if (gameMode != null) {
+                msg += " §7(gamemode: " + gameMode.toLowerCase() + ")";
+            }
+            player.sendMessage(msg);
             return true;
         }
 
