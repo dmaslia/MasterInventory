@@ -50,7 +50,7 @@ public class EventListener implements Listener {
     private final List<PortalLink> portalLinks = new ArrayList<>();
     private final Set<String> linkedWorlds = new HashSet<>();
 
-    private record PortalLink(String world, int x, int y, int z, String targetWorld) {
+    private record PortalLink(String configKey, String world, int x, int y, int z, String targetWorld) {
         boolean isNear(Location loc, int radius) {
             return loc.getWorld() != null
                     && loc.getWorld().getName().equals(world)
@@ -77,6 +77,7 @@ public class EventListener implements Listener {
             if (p == null) continue;
             String targetWorld = p.getString("target_world");
             portalLinks.add(new PortalLink(
+                    key,
                     p.getString("world"),
                     p.getInt("x"),
                     p.getInt("y"),
@@ -97,7 +98,7 @@ public class EventListener implements Listener {
 
     public Location getPortalLocation(String targetWorld) {
         for (PortalLink link : portalLinks) {
-            if (link.targetWorld().equalsIgnoreCase(targetWorld)) {
+            if (link.targetWorld().equals(targetWorld)) {
                 World world = Bukkit.getWorld(link.world());
                 if (world != null) {
                     return new Location(world, link.x() + 0.5, link.y() - 1, link.z() + 0.5);
@@ -127,9 +128,8 @@ public class EventListener implements Listener {
                     }
                 }
                 if (toRemove != null) {
-                    String oldKey = toRemove.targetWorld().replace(" ", "_");
                     plugin.reloadConfig();
-                    plugin.getConfig().set("portals." + oldKey, null);
+                    plugin.getConfig().set("portals." + toRemove.configKey(), null);
                     plugin.saveConfig();
                     portalLinks.remove(toRemove);
                     linkedWorlds.remove(toRemove.targetWorld());
@@ -154,8 +154,7 @@ public class EventListener implements Listener {
                 }
             }
             if (existing != null) {
-                String oldKey = existing.targetWorld().replace(" ", "_");
-                plugin.getConfig().set("portals." + oldKey, null);
+                plugin.getConfig().set("portals." + existing.configKey(), null);
                 portalLinks.remove(existing);
                 linkedWorlds.remove(existing.targetWorld());
             }
@@ -168,7 +167,7 @@ public class EventListener implements Listener {
             plugin.getConfig().set("portals." + key + ".target_world", targetWorld);
             plugin.saveConfig();
 
-            portalLinks.add(new PortalLink(worldName, x, y, z, targetWorld));
+            portalLinks.add(new PortalLink(key, worldName, x, y, z, targetWorld));
             linkedWorlds.add(targetWorld);
             player.sendMessage("§aPortal linked to world: §f" + targetWorld);
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
