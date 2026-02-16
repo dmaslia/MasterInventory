@@ -53,6 +53,7 @@ public final class MasterInventory extends JavaPlugin {
         getCommand("p").setExecutor(commandHandler);
         getCommand("addmobs").setExecutor(commandHandler);
         getCommand("add_world").setExecutor(commandHandler);
+        getCommand("exit").setExecutor(commandHandler);
 
         // automatic inventory counting
         Bukkit.getScheduler().runTaskTimer(this, () -> {

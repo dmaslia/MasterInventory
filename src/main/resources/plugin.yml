@@ -30,3 +30,6 @@ commands:
   add_world:
     description: links a portal to a world teleport
     usage: /add_world <world_name>
+  exit:
+    description: teleports back to the main world portal
+    usage: /exit

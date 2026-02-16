@@ -13,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.VillagerReplenishTradeEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -25,12 +26,18 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.Location;
+import org.bukkit.inventory.PlayerInventory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class EventListener implements Listener {
@@ -41,6 +48,7 @@ public class EventListener implements Listener {
 
     private final Map<UUID, String> pendingPortalLinks = new HashMap<>();
     private final List<PortalLink> portalLinks = new ArrayList<>();
+    private final Set<String> linkedWorlds = new HashSet<>();
 
     private record PortalLink(String world, int x, int y, int z, String targetWorld) {
         boolean isNear(Location loc, int radius) {
@@ -61,23 +69,38 @@ public class EventListener implements Listener {
 
     private void loadPortals() {
         portalLinks.clear();
+        linkedWorlds.clear();
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("portals");
         if (section == null) return;
         for (String key : section.getKeys(false)) {
             ConfigurationSection p = section.getConfigurationSection(key);
             if (p == null) continue;
+            String targetWorld = p.getString("target_world");
             portalLinks.add(new PortalLink(
                     p.getString("world"),
                     p.getInt("x"),
                     p.getInt("y"),
                     p.getInt("z"),
-                    p.getString("target_world")
+                    targetWorld
             ));
+            linkedWorlds.add(targetWorld);
         }
     }
 
     public void addPendingPortal(UUID player, String worldName) {
         pendingPortalLinks.put(player, worldName);
+    }
+
+    public Location getPortalLocation(String targetWorld) {
+        for (PortalLink link : portalLinks) {
+            if (link.targetWorld().equals(targetWorld)) {
+                World world = Bukkit.getWorld(link.world());
+                if (world != null) {
+                    return new Location(world, link.x() + 0.5, link.y() - 1, link.z() + 0.5);
+                }
+            }
+        }
+        return null;
     }
 
     @EventHandler
@@ -103,6 +126,7 @@ public class EventListener implements Listener {
             plugin.saveConfig();
 
             portalLinks.add(new PortalLink(worldName, x, y, z, targetWorld));
+            linkedWorlds.add(targetWorld);
             player.sendMessage("§aPortal linked to world: §f" + targetWorld);
             return;
         }
@@ -117,6 +141,94 @@ public class EventListener implements Listener {
         }
     }
     
+    // --- World-specific inventory management ---
+
+    private static final Set<String> MAIN_WORLDS = Set.of("world", "world_nether", "world_the_end");
+
+    private boolean isMainWorld(String worldName) {
+        return MAIN_WORLDS.contains(worldName);
+    }
+
+    private String getInventoryKey(String worldName) {
+        return isMainWorld(worldName) ? "main" : worldName;
+    }
+
+    private File getInventoryFile(UUID playerId) {
+        File dir = new File(plugin.getDataFolder(), "inventories");
+        if (!dir.exists()) dir.mkdirs();
+        return new File(dir, playerId + ".yml");
+    }
+
+    private void saveWorldInventory(Player player, String key) {
+        File file = getInventoryFile(player.getUniqueId());
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+        PlayerInventory inv = player.getInventory();
+        for (int i = 0; i < 36; i++) {
+            config.set(key + ".inventory." + i, inv.getItem(i));
+        }
+        ItemStack[] armor = inv.getArmorContents();
+        for (int i = 0; i < armor.length; i++) {
+            config.set(key + ".armor." + i, armor[i]);
+        }
+        config.set(key + ".offhand", inv.getItemInOffHand());
+        config.set(key + ".xp_level", player.getLevel());
+        config.set(key + ".xp_exp", (double) player.getExp());
+
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().warning("Failed to save inventory for " + player.getName() + ": " + e.getMessage());
+        }
+    }
+
+    private void loadWorldInventory(Player player, String key) {
+        File file = getInventoryFile(player.getUniqueId());
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+        PlayerInventory inv = player.getInventory();
+        inv.clear();
+        player.setLevel(0);
+        player.setExp(0);
+
+        if (!config.contains(key)) {
+            return;
+        }
+
+        for (int i = 0; i < 36; i++) {
+            ItemStack item = config.getItemStack(key + ".inventory." + i);
+            if (item != null) inv.setItem(i, item);
+        }
+        ItemStack[] armor = new ItemStack[4];
+        for (int i = 0; i < 4; i++) {
+            armor[i] = config.getItemStack(key + ".armor." + i);
+        }
+        inv.setArmorContents(armor);
+        ItemStack offhand = config.getItemStack(key + ".offhand");
+        if (offhand != null) inv.setItemInOffHand(offhand);
+        player.setLevel(config.getInt(key + ".xp_level", 0));
+        player.setExp((float) config.getDouble(key + ".xp_exp", 0.0));
+    }
+
+    @EventHandler
+    public void onWorldChange(PlayerChangedWorldEvent event) {
+        Player player = event.getPlayer();
+        String fromWorld = event.getFrom().getName();
+        String toWorld = player.getWorld().getName();
+
+        String fromKey = getInventoryKey(fromWorld);
+        String toKey = getInventoryKey(toWorld);
+
+        if (fromKey.equals(toKey)) return;
+
+        boolean fromManaged = isMainWorld(fromWorld) || linkedWorlds.contains(fromWorld);
+        boolean toManaged = isMainWorld(toWorld) || linkedWorlds.contains(toWorld);
+        if (!fromManaged && !toManaged) return;
+
+        saveWorldInventory(player, fromKey);
+        loadWorldInventory(player, toKey);
+    }
+
     public void nameEntity(Entity entity, String name) {
         entity.setCustomName(org.bukkit.ChatColor.AQUA + "" + org.bukkit.ChatColor.BOLD + name);
         entity.setCustomNameVisible(true);
@@ -127,16 +239,29 @@ public class EventListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
         inventoryManager.savePlayerInventory(p);
+
+        String worldName = p.getWorld().getName();
+        if (linkedWorlds.contains(worldName)) {
+            loadWorldInventory(p, worldName);
+        }
+
         p.sendMessage("§b[Chat] §7Hello, §a" + p.getName()
                 + "§7, I am here to help. Type §a\"/chat\" §7to start a session.");
         Reminder.playerJoin(p);
-
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        inventoryManager.savePlayerInventory(event.getPlayer());
-        chatManager.removeFromConversation(event.getPlayer().getUniqueId());
+        Player player = event.getPlayer();
+        inventoryManager.savePlayerInventory(player);
+
+        String worldName = player.getWorld().getName();
+        String key = getInventoryKey(worldName);
+        if (linkedWorlds.contains(worldName) || isMainWorld(worldName)) {
+            saveWorldInventory(player, key);
+        }
+
+        chatManager.removeFromConversation(player.getUniqueId());
     }
 
     @EventHandler
