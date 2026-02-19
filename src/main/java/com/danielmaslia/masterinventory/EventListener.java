@@ -18,6 +18,8 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
@@ -366,6 +368,47 @@ public class EventListener implements Listener {
                     player.setGameMode(GameMode.valueOf(savedMode));
                 } catch (IllegalArgumentException ignored) {}
             }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        String worldName = player.getWorld().getName();
+        File file = getInventoryFile(player.getUniqueId());
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        config.set("death_world", worldName);
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().warning("Failed to save death world for " + player.getName());
+        }
+    }
+
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        Player player = event.getPlayer();
+        File file = getInventoryFile(player.getUniqueId());
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        String deathWorld = config.getString("death_world");
+        config.set("death_world", null);
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().warning("Failed to clear death world for " + player.getName());
+        }
+
+        if (deathWorld == null || isMainWorld(deathWorld)) return;
+        if (!linkedWorlds.contains(deathWorld)) return;
+
+        World world = Bukkit.getWorld(deathWorld);
+        if (world == null) return;
+
+        Location respawn = player.getRespawnLocation();
+        if (respawn != null && respawn.getWorld().getName().equals(deathWorld)) {
+            event.setRespawnLocation(respawn);
+        } else {
+            event.setRespawnLocation(world.getSpawnLocation());
         }
     }
 

@@ -204,7 +204,15 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             String currentWorld = player.getWorld().getName();
             org.bukkit.Location portalLoc = eventListener.getPortalLocation(currentWorld);
             if (portalLoc == null) {
-                player.sendMessage(ChatColor.RED + "No linked portal found for this world.");
+                org.bukkit.Location bedLoc = player.getRespawnLocation();
+                if (bedLoc != null) {
+                    player.teleport(bedLoc);
+                } else {
+                    org.bukkit.World mainWorld = org.bukkit.Bukkit.getWorld("world");
+                    if (mainWorld != null) {
+                        player.teleport(mainWorld.getSpawnLocation());
+                    }
+                }
                 return true;
             }
             player.teleport(portalLoc);
