@@ -202,6 +202,10 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
         if (cmd.getName().equals("exit") && sender instanceof Player player) {
             String currentWorld = player.getWorld().getName();
+            if (eventListener.isMainWorld(currentWorld)) {
+                player.sendMessage(ChatColor.RED + "You are already in the main world.");
+                return true;
+            }
             org.bukkit.Location portalLoc = eventListener.getPortalLocation(currentWorld);
             if (portalLoc == null) {
                 org.bukkit.Location bedLoc = player.getRespawnLocation();
@@ -220,6 +224,10 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         }
 
         if (cmd.getName().equals("add_world") && sender instanceof Player player) {
+            if (!player.isOp()) {
+                player.sendMessage(ChatColor.RED + "You must be an operator to use this command.");
+                return true;
+            }
             if (args.length < 1) {
                 player.sendMessage(ChatColor.RED + "Usage: /add_world <world_name> [x y z] [gamemode]");
                 return true;
@@ -265,6 +273,10 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         }
 
         if (cmd.getName().equals("remove_world") && sender instanceof Player player) {
+            if (!player.isOp()) {
+                player.sendMessage(ChatColor.RED + "You must be an operator to use this command.");
+                return true;
+            }
             eventListener.addPendingRemoval(player.getUniqueId());
             player.sendMessage("§aEnter a portal to unlink it.");
             return true;

@@ -250,7 +250,7 @@ public class EventListener implements Listener {
 
     private static final Set<String> MAIN_WORLDS = Set.of("world", "world_nether", "world_the_end");
 
-    private boolean isMainWorld(String worldName) {
+    public boolean isMainWorld(String worldName) {
         return MAIN_WORLDS.contains(worldName);
     }
 
