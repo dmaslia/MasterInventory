@@ -305,6 +305,20 @@ public class EventListener implements Listener {
                             String srcWorld = from.getWorld().getName();
                             String key = lecternWorld.replace(" ", "_");
 
+                            // Remove existing link at this portal location if any
+                            PortalLink existingLectern = null;
+                            for (PortalLink link : portalLinks) {
+                                if (link.isNear(headLevel, 2)) {
+                                    existingLectern = link;
+                                    break;
+                                }
+                            }
+                            if (existingLectern != null) {
+                                plugin.getConfig().set("portals." + existingLectern.configKey(), null);
+                                portalLinks.remove(existingLectern);
+                                linkedWorlds.remove(existingLectern.targetWorld());
+                            }
+
                             plugin.getConfig().set("portals." + key + ".world", srcWorld);
                             plugin.getConfig().set("portals." + key + ".x", lx);
                             plugin.getConfig().set("portals." + key + ".y", ly);
