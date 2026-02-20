@@ -33,6 +33,8 @@ import org.bukkit.Location;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.GameMode;
 import org.bukkit.block.Block;
+import org.bukkit.block.Lectern;
+import org.bukkit.inventory.meta.BookMeta;
 
 import java.io.File;
 import java.io.IOException;
@@ -221,6 +223,90 @@ public class EventListener implements Listener {
                         "wm teleport " + link.targetWorld() + " " + player.getName());
                 return;
             }
+        }
+        
+        
+
+        // Check for a lectern near the portal with book params
+        try {
+            Location portalBase = from.clone();
+            for (int dx = -3; dx <= 3; dx++) {
+                for (int dy = -2; dy <= 2; dy++) {
+                    for (int dz = -3; dz <= 3; dz++) {
+                        Block block = portalBase.getWorld().getBlockAt(
+                                portalBase.getBlockX() + dx, portalBase.getBlockY() + dy, portalBase.getBlockZ() + dz);
+                        if (block.getType() == Material.LECTERN && block.getState() instanceof Lectern lectern) {
+                            ItemStack bookItem = lectern.getSnapshotInventory().getItem(0);
+                            if (bookItem == null || !(bookItem.getItemMeta() instanceof BookMeta bookMeta)) continue;
+                            int page = lectern.getPage();
+                            if (page >= bookMeta.getPageCount()) continue;
+
+                            String pageText = org.bukkit.ChatColor.stripColor(bookMeta.getPage(page + 1)).trim();
+                            String[] parts = pageText.split("\\s+");
+                            if (parts.length < 1 || parts[0].isEmpty()) continue;
+
+                            String lecternWorld = parts[0];
+                            World targetWorldObj = Bukkit.getWorld(lecternWorld);
+                            if (targetWorldObj == null) continue;
+
+                            int[] tpCoords = null;
+                            String lecternGameMode = null;
+                            int idx = 1;
+                            if (parts.length >= idx + 3) {
+                                try {
+                                    tpCoords = new int[]{
+                                        Integer.parseInt(parts[idx]),
+                                        Integer.parseInt(parts[idx + 1]),
+                                        Integer.parseInt(parts[idx + 2])
+                                    };
+                                    idx += 3;
+                                } catch (NumberFormatException ignored) {}
+                            }
+                            if (parts.length > idx) {
+                                try {
+                                    GameMode.valueOf(parts[idx].toUpperCase());
+                                    lecternGameMode = parts[idx].toUpperCase();
+                                } catch (IllegalArgumentException ignored) {}
+                            }
+
+                            if (tpCoords == null) {
+                                Location spawn = targetWorldObj.getSpawnLocation();
+                                tpCoords = new int[]{spawn.getBlockX(), spawn.getBlockY(), spawn.getBlockZ()};
+                            } else {
+                                targetWorldObj.setSpawnLocation(tpCoords[0], tpCoords[1], tpCoords[2]);
+                            }
+
+                            event.setCancelled(true);
+                            int lx = headLevel.getBlockX();
+                            int ly = headLevel.getBlockY();
+                            int lz = headLevel.getBlockZ();
+                            String srcWorld = from.getWorld().getName();
+                            String key = lecternWorld.replace(" ", "_");
+
+                            plugin.getConfig().set("portals." + key + ".world", srcWorld);
+                            plugin.getConfig().set("portals." + key + ".x", lx);
+                            plugin.getConfig().set("portals." + key + ".y", ly);
+                            plugin.getConfig().set("portals." + key + ".z", lz);
+                            plugin.getConfig().set("portals." + key + ".target_world", lecternWorld);
+                            if (lecternGameMode != null) {
+                                plugin.getConfig().set("portals." + key + ".gamemode", lecternGameMode);
+                            }
+                            saveTpLocation(key, lecternWorld, tpCoords[0], tpCoords[1], tpCoords[2]);
+                            plugin.saveConfig();
+
+                            portalLinks.add(new PortalLink(key, srcWorld, lx, ly, lz, lecternWorld, lecternGameMode,
+                                    lecternWorld, tpCoords[0], tpCoords[1], tpCoords[2]));
+                            linkedWorlds.add(lecternWorld);
+
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                                    "wm teleport " + lecternWorld + " " + player.getName());
+                            return;
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // Any failure falls through to normal portal behavior
         }
 
         // Reverse teleport: if player is in a linked world, send them back to main world portal
