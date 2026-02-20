@@ -208,9 +208,9 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             }
             org.bukkit.Location portalLoc = eventListener.getPortalLocation(currentWorld);
             if (portalLoc == null) {
-                org.bukkit.Location bedLoc = player.getRespawnLocation();
-                if (bedLoc != null) {
-                    player.teleport(bedLoc);
+                org.bukkit.Location firstPortal = eventListener.getFirstPortalLocation();
+                if (firstPortal != null) {
+                    player.teleport(firstPortal);
                 } else {
                     org.bukkit.World mainWorld = org.bukkit.Bukkit.getWorld("world");
                     if (mainWorld != null) {

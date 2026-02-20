@@ -133,6 +133,16 @@ public class EventListener implements Listener {
         return null;
     }
 
+    public Location getFirstPortalLocation() {
+        for (PortalLink link : portalLinks) {
+            World world = Bukkit.getWorld(link.world());
+            if (world != null) {
+                return new Location(world, link.x() + 0.5, link.y() - 1, link.z() + 0.5);
+            }
+        }
+        return null;
+    }
+
     @EventHandler
     public void onPlayerPortal(PlayerPortalEvent event) {
         Player player = event.getPlayer();
@@ -238,6 +248,26 @@ public class EventListener implements Listener {
                             if (parts.length < 1 || parts[0].isEmpty()) continue;
 
                             String lecternWorld = parts[0];
+
+                            // "nether" keyword removes the link and restores vanilla behavior
+                            if (lecternWorld.equalsIgnoreCase("nether")) {
+                                PortalLink toRemove = null;
+                                for (PortalLink link : portalLinks) {
+                                    if (link.isNear(headLevel, 2)) {
+                                        toRemove = link;
+                                        break;
+                                    }
+                                }
+                                if (toRemove != null) {
+                                    plugin.reloadConfig();
+                                    plugin.getConfig().set("portals." + toRemove.configKey(), null);
+                                    plugin.saveConfig();
+                                    portalLinks.remove(toRemove);
+                                    linkedWorlds.remove(toRemove.targetWorld());
+                                }
+                                break;
+                            }
+
                             World targetWorldObj = Bukkit.getWorld(lecternWorld);
                             if (targetWorldObj == null) continue;
 
