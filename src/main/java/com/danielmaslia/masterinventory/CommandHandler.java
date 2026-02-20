@@ -273,10 +273,10 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         }
 
         if (cmd.getName().equals("remove_world") && sender instanceof Player player) {
-//            if (!player.isOp()) {
-//                player.sendMessage(ChatColor.RED + "You must be an operator to use this command.");
-//                return true;
-//            }
+            if (!player.isOp()) {
+                player.sendMessage(ChatColor.RED + "You must be an operator to use this command.");
+                return true;
+            }
             eventListener.addPendingRemoval(player.getUniqueId());
             player.sendMessage("§aEnter a portal to unlink it.");
             return true;
