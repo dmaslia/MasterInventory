@@ -20,6 +20,7 @@ import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
@@ -503,6 +504,25 @@ public class EventListener implements Listener {
     }
 
     @EventHandler
+    public void onPlayerBedLeave(PlayerBedLeaveEvent event) {
+        Player player = event.getPlayer();
+        Location bedLoc = event.getBed().getLocation();
+        String worldName = bedLoc.getWorld().getName();
+        String key = getInventoryKey(worldName);
+
+        File file = getInventoryFile(player.getUniqueId());
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        config.set(key + ".respawn.x", bedLoc.getBlockX());
+        config.set(key + ".respawn.y", bedLoc.getBlockY());
+        config.set(key + ".respawn.z", bedLoc.getBlockZ());
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().warning("Failed to save respawn location for " + player.getName());
+        }
+    }
+
+    @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         String worldName = player.getWorld().getName();
@@ -535,9 +555,12 @@ public class EventListener implements Listener {
         World world = Bukkit.getWorld(deathWorld);
         if (world == null) return;
 
-        Location respawn = player.getRespawnLocation();
-        if (respawn != null && respawn.getWorld().getName().equals(deathWorld)) {
-            event.setRespawnLocation(respawn);
+        String key = getInventoryKey(deathWorld);
+        if (config.contains(key + ".respawn.x")) {
+            int rx = config.getInt(key + ".respawn.x");
+            int ry = config.getInt(key + ".respawn.y");
+            int rz = config.getInt(key + ".respawn.z");
+            event.setRespawnLocation(new Location(world, rx + 0.5, ry, rz + 0.5));
         } else {
             event.setRespawnLocation(world.getSpawnLocation());
         }
