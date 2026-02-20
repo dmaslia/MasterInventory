@@ -216,14 +216,6 @@ public class EventListener implements Listener {
             return;
         }
 
-        for (PortalLink link : portalLinks) {
-            if (link.isNear(headLevel, 2)) {
-                event.setCancelled(true);
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
-                        "wm teleport " + link.targetWorld() + " " + player.getName());
-                return;
-            }
-        }
         
         
 
@@ -307,6 +299,15 @@ public class EventListener implements Listener {
             }
         } catch (Exception ignored) {
             // Any failure falls through to normal portal behavior
+        }
+
+        for (PortalLink link : portalLinks) {
+            if (link.isNear(headLevel, 2)) {
+                event.setCancelled(true);
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                        "wm teleport " + link.targetWorld() + " " + player.getName());
+                return;
+            }
         }
 
         // Reverse teleport: if player is in a linked world, send them back to main world portal
