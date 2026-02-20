@@ -20,7 +20,7 @@ import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerBedLeaveEvent;
+
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
@@ -504,17 +504,19 @@ public class EventListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerBedLeave(PlayerBedLeaveEvent event) {
+    public void onSpawnChange(org.bukkit.event.player.PlayerSpawnChangeEvent event) {
         Player player = event.getPlayer();
-        Location bedLoc = event.getBed().getLocation();
-        String worldName = bedLoc.getWorld().getName();
+        Location newSpawn = event.getNewSpawn();
+        if (newSpawn == null) return;
+
+        String worldName = newSpawn.getWorld().getName();
         String key = getInventoryKey(worldName);
 
         File file = getInventoryFile(player.getUniqueId());
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        config.set(key + ".respawn.x", bedLoc.getBlockX());
-        config.set(key + ".respawn.y", bedLoc.getBlockY());
-        config.set(key + ".respawn.z", bedLoc.getBlockZ());
+        config.set(key + ".respawn.x", newSpawn.getBlockX());
+        config.set(key + ".respawn.y", newSpawn.getBlockY());
+        config.set(key + ".respawn.z", newSpawn.getBlockZ());
         try {
             config.save(file);
         } catch (IOException e) {
