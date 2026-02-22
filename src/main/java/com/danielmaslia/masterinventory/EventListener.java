@@ -230,15 +230,28 @@ public class EventListener implements Listener {
         
         
 
-        // Check for a lectern near the portal with book params
+        // Check for a lectern near the portal with book params (inside-out, 20 block radius)
         try {
             Location portalBase = from.clone();
-            for (int dx = -3; dx <= 3; dx++) {
-                for (int dy = -2; dy <= 2; dy++) {
-                    for (int dz = -3; dz <= 3; dz++) {
-                        Block block = portalBase.getWorld().getBlockAt(
-                                portalBase.getBlockX() + dx, portalBase.getBlockY() + dy, portalBase.getBlockZ() + dz);
-                        if (block.getType() == Material.LECTERN && block.getState() instanceof Lectern lectern) {
+            int radius = 20;
+            List<int[]> offsets = new ArrayList<>();
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dy = -radius; dy <= radius; dy++) {
+                    for (int dz = -radius; dz <= radius; dz++) {
+                        if (dx * dx + dy * dy + dz * dz <= radius * radius) {
+                            offsets.add(new int[]{dx, dy, dz});
+                        }
+                    }
+                }
+            }
+            offsets.sort((a, b) -> Integer.compare(
+                    a[0] * a[0] + a[1] * a[1] + a[2] * a[2],
+                    b[0] * b[0] + b[1] * b[1] + b[2] * b[2]));
+            for (int[] offset : offsets) {
+                int dx = offset[0], dy = offset[1], dz = offset[2];
+                Block block = portalBase.getWorld().getBlockAt(
+                        portalBase.getBlockX() + dx, portalBase.getBlockY() + dy, portalBase.getBlockZ() + dz);
+                if (block.getType() == Material.LECTERN && block.getState() instanceof Lectern lectern) {
                             ItemStack bookItem = lectern.getSnapshotInventory().getItem(0);
                             if (bookItem == null || !(bookItem.getItemMeta() instanceof BookMeta bookMeta)) continue;
                             int page = lectern.getPage();
@@ -338,8 +351,6 @@ public class EventListener implements Listener {
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
                                     "wm teleport " + lecternWorld + " " + player.getName());
                             return;
-                        }
-                    }
                 }
             }
         } catch (Exception ignored) {
