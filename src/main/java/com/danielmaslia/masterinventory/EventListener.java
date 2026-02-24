@@ -367,16 +367,6 @@ public class EventListener implements Listener {
         }
 
         // Reverse teleport: if player is in a linked world, send them back to main world portal
-        String currentWorld = player.getWorld().getName();
-        if (linkedWorlds.contains(currentWorld)) {
-            event.setCancelled(true);
-            Location portalLoc = getPortalLocation(currentWorld);
-            if (portalLoc != null) {
-                player.teleport(portalLoc);
-            } else {
-                player.sendMessage("§cNo linked portal found to return to.");
-            }
-        }
     }
     
     // --- Portal building ---
