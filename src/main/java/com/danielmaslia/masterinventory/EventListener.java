@@ -149,6 +149,10 @@ public class EventListener implements Listener {
         Player player = event.getPlayer();
         Location from = event.getFrom();
         Location headLevel = from.clone().add(0, 1, 0);
+        
+        if (!isMainWorld(event.getPlayer().getWorld().getName())) {
+            return;
+        }
 
         if (pendingPortalLinks.containsKey(player.getUniqueId())) {
             event.setCancelled(true);
