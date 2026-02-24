@@ -479,6 +479,9 @@ public class EventListener implements Listener {
 
         String fromKey = getInventoryKey(fromWorld);
         String toKey = getInventoryKey(toWorld);
+        if (toKey.equals("skyblock_nether")) {
+            toKey = "skyblock";
+        }
 
         if (fromKey.equals(toKey)) return;
 
