@@ -349,12 +349,11 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                             byLoc.merge(loc, count, Integer::sum);
                         }
                         player.sendMessage(ChatColor.YELLOW + "  " + src.getKey() + ": " + ChatColor.GRAY + sourceTotal);
-                        for (Map.Entry<String, Integer> locEntry : byLoc.entrySet()) {
-                            String loc = locEntry.getKey();
-                            if (loc != null && !loc.isEmpty()) {
-                                player.sendMessage(ChatColor.DARK_AQUA + "    @ " + ChatColor.WHITE + loc + ChatColor.GRAY + " x" + locEntry.getValue());
-                            }
-                        }
+                        byLoc.entrySet().stream()
+                            .filter(e -> e.getKey() != null && !e.getKey().isEmpty())
+                            .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                            .limit(3)
+                            .forEach(e -> player.sendMessage(ChatColor.DARK_AQUA + "    @ " + ChatColor.WHITE + e.getKey() + ChatColor.GRAY + " x" + e.getValue()));
                     }
                 }
                 player.sendMessage(ChatColor.GOLD + "-----------------------------------");
