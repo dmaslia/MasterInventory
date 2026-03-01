@@ -2,8 +2,11 @@ package com.danielmaslia.masterinventory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -51,9 +54,11 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         } else if (command.getName().equals("save") && args.length > 0) {
             int index = Math.min(args.length - 1, save_suggestions.size() - 1);
             return save_suggestions.get(index);
+        } else if (command.getName().equals("find")) {
+            return Arrays.asList("<item_name>");
         }
 
-        return new ArrayList<>(); 
+        return new ArrayList<>();
     }
 
     @Override
@@ -279,6 +284,70 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             }
             eventListener.addPendingRemoval(player.getUniqueId());
             player.sendMessage("§aEnter a portal to unlink it.");
+            return true;
+        }
+
+        if (cmd.getName().equals("find") && sender instanceof Player player) {
+            if (args.length < 1) {
+                player.sendMessage(ChatColor.RED + "Usage: /find <item_name>");
+                return true;
+            }
+
+            inventoryManager.countInventory();
+
+            String search = String.join(" ", args).toUpperCase().replace(" ", "_");
+            Pattern pattern = Pattern.compile(".*" + Pattern.quote(search) + ".*", Pattern.CASE_INSENSITIVE);
+
+            // Collect all items from all inventory CSVs: material -> {source -> totalCount}
+            Map<String, Map<String, Integer>> allItems = new HashMap<>();
+            for (String fileName : csvExporter.listInventoryFiles()) {
+                String source = fileName.replace(".csv", "");
+                Map<String, List<String[]>> csv = csvExporter.readInventoryCSV(fileName);
+                for (Map.Entry<String, List<String[]>> entry : csv.entrySet()) {
+                    String material = entry.getKey();
+                    int total = 0;
+                    for (String[] pair : entry.getValue()) {
+                        try { total += Integer.parseInt(pair[0]); } catch (NumberFormatException ignored) {}
+                    }
+                    allItems.computeIfAbsent(material, k -> new HashMap<>()).merge(source, total, Integer::sum);
+                }
+            }
+
+            // Find matches
+            List<String> matches = new ArrayList<>();
+            for (String material : allItems.keySet()) {
+                String normalized = material.toUpperCase().replace(" ", "_");
+                if (pattern.matcher(normalized).matches()) {
+                    matches.add(material);
+                }
+            }
+
+            if (matches.isEmpty()) {
+                player.sendMessage(ChatColor.RED + "No items found matching: " + ChatColor.GRAY + String.join(" ", args));
+            } else if (matches.size() <= 8) {
+                player.sendMessage(ChatColor.GOLD + "-----------------------------------");
+                player.sendMessage(ChatColor.GOLD + "  Find Results: " + ChatColor.GRAY + String.join(" ", args));
+                player.sendMessage(ChatColor.GOLD + "-----------------------------------");
+                for (String material : matches) {
+                    Map<String, Integer> sources = allItems.get(material);
+                    int grandTotal = sources.values().stream().mapToInt(Integer::intValue).sum();
+                    player.sendMessage(ChatColor.GREEN + material + ChatColor.AQUA + " x" + ChatColor.GRAY + grandTotal);
+                    for (Map.Entry<String, Integer> src : sources.entrySet()) {
+                        player.sendMessage(ChatColor.YELLOW + "  " + src.getKey() + ": " + ChatColor.GRAY + src.getValue());
+                    }
+                }
+                player.sendMessage(ChatColor.GOLD + "-----------------------------------");
+            } else {
+                player.sendMessage(ChatColor.GOLD + "-----------------------------------");
+                player.sendMessage(ChatColor.RED + "Too many matches (" + matches.size() + "). Be more specific.");
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < matches.size(); i++) {
+                    if (i > 0) sb.append(ChatColor.GRAY + ", ");
+                    sb.append(ChatColor.GREEN + matches.get(i));
+                }
+                player.sendMessage(sb.toString());
+                player.sendMessage(ChatColor.GOLD + "-----------------------------------");
+            }
             return true;
         }
 

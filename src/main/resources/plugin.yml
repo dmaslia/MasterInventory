@@ -36,3 +36,6 @@ commands:
   remove_world:
     description: unlinks a portal from a world teleport
     usage: /remove_world
+  find:
+    description: finds items in tracked inventory
+    usage: /find <item_name>

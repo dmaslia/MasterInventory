@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -19,10 +20,12 @@ import org.bukkit.entity.Player;
 
 public class CSVExporter {
     private final File dataFolder;
+    private final File inventoryFolder;
     private final Logger logger;
 
     public CSVExporter(File dataFolder, Logger logger) {
         this.dataFolder = dataFolder;
+        this.inventoryFolder = new File(dataFolder, "inventory_csv");
         this.logger = logger;
     }
 
@@ -91,11 +94,11 @@ public class CSVExporter {
 
     // saver for inventory
     public void saveInvToCSV(Map<InventoryManager.ItemKey, Integer> data, String fileName) {
-        if (!dataFolder.exists()) {
-            dataFolder.mkdirs();
+        if (!inventoryFolder.exists()) {
+            inventoryFolder.mkdirs();
         }
 
-        File file = new File(dataFolder, fileName);
+        File file = new File(inventoryFolder, fileName);
 
         try {
             FileWriter fw = new FileWriter(file, false);
@@ -174,6 +177,50 @@ public class CSVExporter {
         }
 
         return chunks;
+    }
+
+    // Reads an inventory CSV and returns material -> list of [count, location] pairs
+    public Map<String, List<String[]>> readInventoryCSV(String fileName) {
+        Map<String, List<String[]>> result = new HashMap<>();
+        File file = new File(inventoryFolder, fileName);
+        if (!file.exists()) return result;
+
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+            boolean headerSkipped = false;
+            while ((line = reader.readLine()) != null) {
+                if (!headerSkipped) {
+                    // Skip the title line (e.g. "Inventory for scan_results.csv")
+                    headerSkipped = true;
+                    continue;
+                }
+                if (line.startsWith("Material,")) continue; // skip column header
+                String[] parts = line.split(",", 4);
+                if (parts.length < 2) continue;
+                String material = parts[0].trim();
+                String count = parts[1].trim();
+                String loc = parts.length >= 4 ? parts[3].trim() : "";
+                result.computeIfAbsent(material, k -> new ArrayList<>()).add(new String[]{count, loc});
+            }
+            reader.close();
+        } catch (IOException e) {
+            logger.severe("Could not read CSV file: " + fileName);
+        }
+        return result;
+    }
+
+    // Lists all inventory CSV files in the inventories folder
+    public List<String> listInventoryFiles() {
+        List<String> files = new ArrayList<>();
+        if (!inventoryFolder.exists()) return files;
+        File[] csvFiles = inventoryFolder.listFiles((dir, name) -> name.endsWith(".csv"));
+        if (csvFiles != null) {
+            for (File f : csvFiles) {
+                files.add(f.getName());
+            }
+        }
+        return files;
     }
 
     public boolean removeChunkFromFile(Chunk chunk) {
