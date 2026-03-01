@@ -124,18 +124,25 @@ public class InventoryManager {
                         continue;
                     }
                     Inventory inv = container.getInventory();
+                    if (inv.getSize() == 54) {
+                        Bukkit.getLogger().info("[MasterInventory] double chest at " + state.getLocation() + " -> identity=" + System.identityHashCode(inv));
+                    }
                     Map<ItemKey, Integer> targetMap = (inv.getSize() == 54) ? countsLarge : counts;
-                    
+
                     lastId = processInventory(inv.getContents(), targetMap, lastId, state.getLocation());
                 }
             }
         }
 
         countsLarge.forEach((key, amount) -> {
+            int contribution;
             if (key.id() != null && !key.material().name().endsWith("SHULKER_BOX")) {
-                counts.merge(key, amount, Integer::sum);
+                contribution = amount;
             } else {
-                counts.merge(key, amount / 2, Integer::sum);
+                contribution = amount / 2;
+            }
+            if (contribution > 0) {
+                counts.merge(key, contribution, Integer::sum);
             }
         });
 

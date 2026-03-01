@@ -335,7 +335,9 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                     for (List<String[]> pairs : sources.values())
                         for (String[] p : pairs)
                             try { grandTotal += Integer.parseInt(p[0]); } catch (NumberFormatException ignored) {}
-                    player.sendMessage(ChatColor.GREEN + material + ChatColor.AQUA + " x" + ChatColor.GRAY + grandTotal);
+                    List<String> categories = ItemCategories.getCategories(material);
+                    String categoryTag = categories.isEmpty() ? "" : ChatColor.DARK_GRAY + " [" + String.join(", ", categories) + "]";
+                    player.sendMessage(ChatColor.GREEN + material + categoryTag + ChatColor.AQUA + " x" + ChatColor.GRAY + grandTotal);
                     for (Map.Entry<String, List<String[]>> src : sources.entrySet()) {
                         Map<String, Integer> byLoc = new LinkedHashMap<>();
                         int sourceTotal = 0;
