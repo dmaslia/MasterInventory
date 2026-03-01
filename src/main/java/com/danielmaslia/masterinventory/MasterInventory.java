@@ -14,7 +14,7 @@ public final class MasterInventory extends JavaPlugin {
     InventoryManager.ScanArea netherArea = new InventoryManager.ScanArea(netherCenter, "world_nether", 20);
     Location endCenter = new Location(null, 2, 61, -2);
     InventoryManager.ScanArea endArea = new InventoryManager.ScanArea(endCenter, "world_the_end", 10);
-    private static final long AUTOSAVE_INTERVAL = 12000L;
+    private static final long AUTOSAVE_INTERVAL = 600L;
 
     private InventoryManager inventoryManager;
     private ChatManager chatManager;

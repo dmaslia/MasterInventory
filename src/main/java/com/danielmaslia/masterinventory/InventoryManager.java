@@ -2,6 +2,7 @@ package com.danielmaslia.masterinventory;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -33,6 +34,7 @@ public class InventoryManager {
 
     private final CSVExporter csvExporter;
     private List<Chunk> chunks;
+    private final Map<String, Map<ItemKey, Integer>> lastScan = new LinkedHashMap<>();
 
     public InventoryManager(CSVExporter csvExporter, ScanArea worldArea, ScanArea netherArea, ScanArea endArea) {
         this.csvExporter = csvExporter;
@@ -103,6 +105,7 @@ public class InventoryManager {
 
         processInventory(combined, counts, 0, player.getLocation());
 
+        lastScan.put(player.getName(), new HashMap<>(counts));
         csvExporter.saveInvToCSV(counts, player.getName() + ".csv");
     }
 
@@ -136,8 +139,11 @@ public class InventoryManager {
             }
         });
 
+        lastScan.put("scan_results", new HashMap<>(counts));
         csvExporter.saveInvToCSV(counts, "scan_results.csv");
     }
+
+    public Map<String, Map<ItemKey, Integer>> getLastScan() { return lastScan; }
 
     public void countInventory() {
         saveChunkContainers();

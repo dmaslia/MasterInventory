@@ -3,6 +3,7 @@ package com.danielmaslia.masterinventory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -10,6 +11,7 @@ import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -293,23 +295,22 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            inventoryManager.countInventory();
-
             String search = String.join(" ", args).toUpperCase().replace(" ", "_");
             Pattern pattern = Pattern.compile(".*" + Pattern.quote(search) + ".*", Pattern.CASE_INSENSITIVE);
 
-            // Collect all items from all inventory CSVs: material -> {source -> totalCount}
-            Map<String, Map<String, Integer>> allItems = new HashMap<>();
-            for (String fileName : csvExporter.listInventoryFiles()) {
-                String source = fileName.replace(".csv", "");
-                Map<String, List<String[]>> csv = csvExporter.readInventoryCSV(fileName);
-                for (Map.Entry<String, List<String[]>> entry : csv.entrySet()) {
-                    String material = entry.getKey();
-                    int total = 0;
-                    for (String[] pair : entry.getValue()) {
-                        try { total += Integer.parseInt(pair[0]); } catch (NumberFormatException ignored) {}
-                    }
-                    allItems.computeIfAbsent(material, k -> new HashMap<>()).merge(source, total, Integer::sum);
+            // Collect all items from in-memory last scan: material -> {source -> list of [count, locStr]}
+            Map<String, Map<String, List<String[]>>> allItems = new HashMap<>();
+            for (Map.Entry<String, Map<InventoryManager.ItemKey, Integer>> srcEntry : inventoryManager.getLastScan().entrySet()) {
+                String source = srcEntry.getKey();
+                for (Map.Entry<InventoryManager.ItemKey, Integer> item : srcEntry.getValue().entrySet()) {
+                    String material = StringUtils.formatEnumString(item.getKey().material().name());
+                    Location loc = item.getKey().loc();
+                    String locStr = loc != null
+                        ? (loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ())
+                        : "";
+                    allItems.computeIfAbsent(material, k -> new HashMap<>())
+                            .computeIfAbsent(source, k -> new ArrayList<>())
+                            .add(new String[]{item.getValue().toString(), locStr});
                 }
             }
 
@@ -329,11 +330,29 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 player.sendMessage(ChatColor.GOLD + "  Find Results: " + ChatColor.GRAY + String.join(" ", args));
                 player.sendMessage(ChatColor.GOLD + "-----------------------------------");
                 for (String material : matches) {
-                    Map<String, Integer> sources = allItems.get(material);
-                    int grandTotal = sources.values().stream().mapToInt(Integer::intValue).sum();
+                    Map<String, List<String[]>> sources = allItems.get(material);
+                    int grandTotal = 0;
+                    for (List<String[]> pairs : sources.values())
+                        for (String[] p : pairs)
+                            try { grandTotal += Integer.parseInt(p[0]); } catch (NumberFormatException ignored) {}
                     player.sendMessage(ChatColor.GREEN + material + ChatColor.AQUA + " x" + ChatColor.GRAY + grandTotal);
-                    for (Map.Entry<String, Integer> src : sources.entrySet()) {
-                        player.sendMessage(ChatColor.YELLOW + "  " + src.getKey() + ": " + ChatColor.GRAY + src.getValue());
+                    for (Map.Entry<String, List<String[]>> src : sources.entrySet()) {
+                        Map<String, Integer> byLoc = new LinkedHashMap<>();
+                        int sourceTotal = 0;
+                        for (String[] pair : src.getValue()) {
+                            int count = 0;
+                            try { count = Integer.parseInt(pair[0]); } catch (NumberFormatException ignored) {}
+                            sourceTotal += count;
+                            String loc = pair.length > 1 ? pair[1] : "";
+                            byLoc.merge(loc, count, Integer::sum);
+                        }
+                        player.sendMessage(ChatColor.YELLOW + "  " + src.getKey() + ": " + ChatColor.GRAY + sourceTotal);
+                        for (Map.Entry<String, Integer> locEntry : byLoc.entrySet()) {
+                            String loc = locEntry.getKey();
+                            if (loc != null && !loc.isEmpty()) {
+                                player.sendMessage(ChatColor.DARK_AQUA + "    @ " + ChatColor.WHITE + loc + ChatColor.GRAY + " x" + locEntry.getValue());
+                            }
+                        }
                     }
                 }
                 player.sendMessage(ChatColor.GOLD + "-----------------------------------");
