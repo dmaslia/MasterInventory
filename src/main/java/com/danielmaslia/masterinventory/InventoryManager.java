@@ -153,11 +153,11 @@ public class InventoryManager {
     public Map<String, Map<ItemKey, Integer>> getLastScan() { return lastScan; }
 
     public void countInventory() {
-        saveChunkContainers();
+        // saveChunkContainers();
 
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            savePlayerInventory(p);
-        }
+        // for (Player p : Bukkit.getOnlinePlayers()) {
+        //     savePlayerInventory(p);
+       //  }
     }
 
     public boolean addChunk(Chunk c) {
