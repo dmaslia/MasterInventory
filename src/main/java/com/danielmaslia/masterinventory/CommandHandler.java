@@ -66,7 +66,10 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender instanceof Player && cmd.getName().equals("getinv")) {
-            inventoryManager.countInventory();
+            inventoryManager.initScan();
+            for (org.bukkit.entity.Player p : org.bukkit.Bukkit.getOnlinePlayers()) {
+                inventoryManager.savePlayerInventory(p);
+            }
             sender.sendMessage(ChatColor.GOLD + "-----------------------------------");
             sender.sendMessage(ChatColor.GOLD + "              Inventory Saved           ");
             sender.sendMessage(ChatColor.GOLD + "-----------------------------------");
@@ -81,7 +84,6 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 return true;
             }
             if (args.length == 0) {
-                inventoryManager.countInventory();
             	Bukkit.broadcastMessage("§bSession started. Type §a\"exit\" §bto end.");
             	Bukkit.broadcastMessage("§b[Chat] §7What's up?");
                 chatManager.startConversation();
@@ -171,7 +173,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             if (added) {
                 csvExporter.saveChunkToFile(chunk);
                 player.sendMessage(ChatColor.GREEN + "Chunk added: " + ChatColor.GRAY + chunk.getX() + ", " + chunk.getZ());
-                inventoryManager.countInventory();
+                inventoryManager.scanChunk(chunk);
             } else {
                 player.sendMessage(ChatColor.YELLOW + "Chunk already exists: " + ChatColor.GRAY + chunk.getX() + ", " + chunk.getZ());
             }
@@ -186,7 +188,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
             if (removedFromList || removedFromFile) {
                 player.sendMessage(ChatColor.RED + "Chunk removed: " + ChatColor.GRAY + chunk.getX() + ", " + chunk.getZ());
-                inventoryManager.countInventory();
+                inventoryManager.unscanChunk(chunk);
             } else {
                 player.sendMessage(ChatColor.YELLOW + "Chunk not found: " + ChatColor.GRAY + chunk.getX() + ", " + chunk.getZ());
             }

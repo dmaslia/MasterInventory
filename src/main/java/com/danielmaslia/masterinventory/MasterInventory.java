@@ -58,10 +58,13 @@ public final class MasterInventory extends JavaPlugin {
         getCommand("find").setExecutor(commandHandler);
         getCommand("find").setTabCompleter(commandHandler);
 
-        // automatic inventory counting
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            inventoryManager.countInventory();
-        }, 0L, AUTOSAVE_INTERVAL);
+        // initial inventory scan on startup
+        Bukkit.getScheduler().runTask(this, () -> {
+            inventoryManager.initScan();
+            for (org.bukkit.entity.Player p : Bukkit.getOnlinePlayers()) {
+                inventoryManager.savePlayerInventory(p);
+            }
+        });
 
         // automatic reminder checking 
         Bukkit.getScheduler().runTaskTimer(this, () -> {

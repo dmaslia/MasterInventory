@@ -12,6 +12,10 @@ import org.bukkit.entity.Villager.Profession;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.VillagerReplenishTradeEvent;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -586,6 +590,7 @@ public class EventListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
         inventoryManager.savePlayerInventory(p);
+        inventoryManager.flushDirty();
 
         String worldName = p.getWorld().getName();
         if (linkedWorlds.contains(worldName)) {
@@ -601,6 +606,7 @@ public class EventListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         inventoryManager.savePlayerInventory(player);
+        inventoryManager.flushDirty();
 
         String worldName = player.getWorld().getName();
         String key = getInventoryKey(worldName);
@@ -703,10 +709,50 @@ public class EventListener implements Listener {
     }
 
     @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getInventory().getHolder() instanceof org.bukkit.block.Container) {
+            Location loc = event.getInventory().getLocation();
+            if (loc != null) {
+                inventoryManager.updateContainer(loc, event.getInventory());
+            }
+        }
+        if (event.getPlayer() instanceof Player player) {
+            inventoryManager.savePlayerInventory(player);
+        }
+    }
+
+    @EventHandler
     public void onInventoryMove(InventoryMoveItemEvent event) {
-        String name = event.getItem().getType().name();
-        if (name.contains("MANGROVE")) {
-            Bukkit.getLogger().info("[MasterInventory] InventoryMoveItemEvent: " + name + " from " + event.getSource().getType() + " to " + event.getDestination().getType());
+
+        Location srcLoc = event.getSource().getLocation();
+        Location destLoc = event.getDestination().getLocation();
+        if (srcLoc != null) inventoryManager.markDirty(srcLoc);
+        if (destLoc != null) inventoryManager.markDirty(destLoc);
+    }
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        if (event.getBlock().getState() instanceof org.bukkit.block.Container container) {
+            Location loc = container.getInventory().getLocation();
+            inventoryManager.removeContainer(loc);
+        }
+    }
+
+    @EventHandler
+    public void onBlockExplode(BlockExplodeEvent event) {
+        for (org.bukkit.block.Block block : event.blockList()) {
+            if (block.getState() instanceof org.bukkit.block.Container container) {
+                inventoryManager.removeContainer(container.getInventory().getLocation());
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityExplode(EntityExplodeEvent event) {
+        for (org.bukkit.block.Block block : event.blockList()) {
+            if (block.getState() instanceof org.bukkit.block.Container container) {
+                inventoryManager.removeContainer(container.getInventory().getLocation());
+            }
         }
     }
 
@@ -729,13 +775,10 @@ public class EventListener implements Listener {
             chatManager.pauseTimer();
             chatManager.addToHistory(player.getName() + ": " + message);
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                inventoryManager.countInventory();
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                    String fullHistory = chatManager.getFullHistory();
-                    Bukkit.broadcastMessage("§b[Chat] §7One sec...");
-                    chatManager.runPythonAI(player, fullHistory);
-                });
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                String fullHistory = chatManager.getFullHistory();
+                Bukkit.broadcastMessage("§b[Chat] §7One sec...");
+                chatManager.runPythonAI(player, fullHistory);
             });
         }
     }
