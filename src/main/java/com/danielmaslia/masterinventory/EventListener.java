@@ -710,7 +710,8 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getInventory().getHolder() instanceof org.bukkit.block.Container) {
+        org.bukkit.inventory.InventoryHolder holder = event.getInventory().getHolder();
+        if (holder instanceof org.bukkit.block.Container || holder instanceof org.bukkit.block.DoubleChest) {
             Location loc = event.getInventory().getLocation();
             if (loc != null) {
                 inventoryManager.updateContainer(loc, event.getInventory());
