@@ -252,6 +252,7 @@ public class InventoryManager {
      * Resolve dirty containers and write CSV. Called from join/quit events.
      */
     public void flushDirty() {
+        Bukkit.getLogger().info("flushed dirty");
         if (!dirtyLocations.isEmpty() || scanDirty) {
             saveScanResultsCSV();
         }
