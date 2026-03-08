@@ -12,6 +12,7 @@ import org.bukkit.entity.Villager.Profession;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.VillagerReplenishTradeEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -699,6 +700,14 @@ public class EventListener implements Listener {
         if (profession == Profession.TOOLSMITH) return Sound.BLOCK_ANVIL_USE;
         if (profession == Profession.WEAPONSMITH) return Sound.BLOCK_ANVIL_USE;
         return null;
+    }
+
+    @EventHandler
+    public void onInventoryMove(InventoryMoveItemEvent event) {
+        String name = event.getItem().getType().name();
+        if (name.contains("MANGROVE")) {
+            Bukkit.getLogger().info("[MasterInventory] InventoryMoveItemEvent: " + name + " from " + event.getSource().getType() + " to " + event.getDestination().getType());
+        }
     }
 
     @EventHandler
