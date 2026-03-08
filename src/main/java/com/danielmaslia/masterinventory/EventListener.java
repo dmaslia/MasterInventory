@@ -710,12 +710,10 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        org.bukkit.inventory.InventoryHolder holder = event.getInventory().getHolder();
-        if (holder instanceof org.bukkit.block.Container || holder instanceof org.bukkit.block.DoubleChest) {
-            Location loc = event.getInventory().getLocation();
-            if (loc != null) {
-                inventoryManager.updateContainer(loc, event.getInventory());
-            }
+        Location loc = event.getInventory().getLocation();
+        if (loc != null) {
+            inventoryManager.markDirty(loc);
+            inventoryManager.flushDirty();
         }
         if (event.getPlayer() instanceof Player player) {
             inventoryManager.savePlayerInventory(player);
