@@ -89,9 +89,6 @@ public class InventoryManager {
     private int processInventory(ItemStack[] items, Map<ItemKey, Integer> targetMap, int lastId, Location loc) {
         for (ItemStack stack : items) {
             if (stack == null || stack.getType().isAir()) continue;
-            if (stack.getType().equals(Material.NETHERITE_CHESTPLATE)) {
-                Bukkit.getLogger().info("chestplate!");
-            }
  
             Integer shulkerId = null;
             ShulkerBox shulkerBox = null;
