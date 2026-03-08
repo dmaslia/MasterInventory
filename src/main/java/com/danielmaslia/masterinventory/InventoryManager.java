@@ -39,6 +39,7 @@ public class InventoryManager {
     private final Map<String, Map<ItemKey, Integer>> lastScan = new LinkedHashMap<>();
     private final Map<Location, Map<ItemKey, Integer>> containerCounts = new HashMap<>();
     private final Set<Location> dirtyLocations = new HashSet<>();
+    private final Set<Location> copperLocations = new HashSet<>();
     private boolean scanDirty = true;
 
     public InventoryManager(CSVExporter csvExporter, ScanArea worldArea, ScanArea netherArea, ScanArea endArea) {
@@ -137,6 +138,9 @@ public class InventoryManager {
                     if (!seenInventories.add(identity)) continue;
 
                     Location loc = toBlockLocation(inv.getLocation());
+                    if(state.getBlock().getType().equals(Material.COPPER_CHEST)) {
+                        copperLocations.add(loc);
+                    }
                     Map<ItemKey, Integer> counts = new HashMap<>();
                     processInventory(inv.getContents(), counts, 0, loc);
                     containerCounts.put(loc, counts);
@@ -162,7 +166,7 @@ public class InventoryManager {
                 containerCounts.remove(loc);
             }
         }
-        dirtyLocations.clear();
+        dirtyLocations.retainAll(copperLocations);
 
         Map<ItemKey, Integer> merged = new HashMap<>();
         for (Map<ItemKey, Integer> counts : containerCounts.values()) {
