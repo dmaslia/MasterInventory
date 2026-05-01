@@ -673,7 +673,7 @@ public class EventListener implements Listener {
                         java.util.List<MerchantRecipe> recipes = new java.util.ArrayList<>(v.getRecipes());
                         for (MerchantRecipe recipe : recipes) {
                             recipe.setUses(0);
-                            recipe.setExperienceReward(false);
+                            recipe.setExperienceReward(true);
                             recipe.setDemand(0);
                         }
                         v.setRecipes(recipes);
