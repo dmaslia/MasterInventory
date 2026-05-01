@@ -1309,7 +1309,7 @@ public class EventListener implements Listener {
 
     public static void mobChat() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (random.nextDouble() >= 0.10) continue;
+            if (random.nextDouble() >= 0.40) continue;
 
             List<LivingEntity> nearbyMobs = new ArrayList<>();
             for (Entity entity : player.getNearbyEntities(10, 10, 10)) {
