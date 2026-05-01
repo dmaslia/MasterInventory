@@ -871,6 +871,426 @@ public class EventListener implements Listener {
             "I could outrun you carrying a chicken. And I have.",
             "Your berry farm is a joke. I've seen better in the wild.",
             "I'm cuter, faster, and smarter. Deal with it."
+        }),
+        Map.entry(EntityType.COPPER_GOLEM, new String[]{
+            "I'm oxidizing faster than your skill is improving.",
+            "They voted me out and I'm still more useful than you.",
+            "I press buttons randomly and still make better choices than you.",
+            "I'm literally turning green and I still look better than your build.",
+            "I was rejected by the community and I'm STILL here. Unlike your dignity."
+        }),
+        Map.entry(EntityType.BLAZE, new String[]{
+            "You came to the Nether with THAT gear? Bold and stupid.",
+            "I'm literally on fire and I'm still cooler than you.",
+            "My fireballs have more direction in life than you do.",
+            "You need fire resistance just to stand near greatness.",
+            "I drop blaze rods. You drop the ball."
+        }),
+        Map.entry(EntityType.GHAST, new String[]{
+            "I'm crying because I have to look at you.",
+            "You can't even hit my fireball back. Embarrassing.",
+            "I scream because your gameplay is that painful to watch.",
+            "I'm a floating cube of tears and I'm still more put-together than you.",
+            "The Nether is my home. You're just a tourist."
+        }),
+        Map.entry(EntityType.SLIME, new String[]{
+            "I split into pieces and each one is still better than you.",
+            "You can't even kill me properly. I just multiply.",
+            "I'm literally brainless goo and I have more game sense than you.",
+            "Bounce. That's what your sword does off me. Pathetic.",
+            "Even my smallest form could take you."
+        }),
+        Map.entry(EntityType.MAGMA_CUBE, new String[]{
+            "I'm a slime but hotter. You're just lukewarm.",
+            "Step on me. I dare you. I DARE you.",
+            "I bounce higher than your K/D ratio.",
+            "The Nether literally made me better. What's your excuse?",
+            "I split and each piece still has more fight than you."
+        }),
+        Map.entry(EntityType.WITHER_SKELETON, new String[]{
+            "My sword gives wither. Your sword gives disappointment.",
+            "I'm taller, darker, and scarier. Accept it.",
+            "You want my skull? Come and get it. You won't.",
+            "I live in a fortress. You live in a dirt box.",
+            "Even regular skeletons make fun of you."
+        }),
+        Map.entry(EntityType.GUARDIAN, new String[]{
+            "My laser has better focus than you ever will.",
+            "You came to an ocean monument without depth strider? Amateur.",
+            "I see you flailing around underwater. It's hilarious.",
+            "Thorns and lasers. What do you have? Anxiety.",
+            "You're drowning in more ways than one."
+        }),
+        Map.entry(EntityType.ELDER_GUARDIAN, new String[]{
+            "Mining fatigue. That's what you deserve.",
+            "I cursed you the moment you swam in here.",
+            "I'm ancient and I could still destroy you.",
+            "You brought milk? How adorable. How useless.",
+            "My temple has better architecture than anything you've ever built."
+        }),
+        Map.entry(EntityType.SHULKER, new String[]{
+            "Enjoy floating to your death. You're welcome.",
+            "I'm a box. A BOX just beat you.",
+            "My bullets track better than your aim ever could.",
+            "Levitation is fun until you hit the ground. For me it's always fun.",
+            "I've been sitting in this End City longer than you've been relevant."
+        }),
+        Map.entry(EntityType.EVOKER, new String[]{
+            "My vexes have more personality than you.",
+            "I summon fangs from the ground. You summon disappointment.",
+            "You want a totem? Earn it. Oh wait, you can't.",
+            "I lead raids. You can't even lead yourself out of a cave.",
+            "My magic is ancient. Your skills are nonexistent."
+        }),
+        Map.entry(EntityType.VINDICATOR, new String[]{
+            "JOHNNY! Oh wait, that's just what I yell before I end you.",
+            "My axe does more damage than your entire existence.",
+            "I raid villages for fun. I'd raid yours but it's not worth it.",
+            "You think iron armor will save you? Cute.",
+            "I swing harder than your motivation to play."
+        }),
+        Map.entry(EntityType.PILLAGER, new String[]{
+            "My crossbow has seen more action than your entire inventory.",
+            "I start raids. You start nothing.",
+            "That banner on my head? It's a trophy. You have none.",
+            "Bad Omen is what people feel when they see you too.",
+            "I patrol with a squad. You wander alone. Says a lot."
+        }),
+        Map.entry(EntityType.RAVAGER, new String[]{
+            "I destroy crops and I'd destroy you just as easily.",
+            "You can't even get on my back. Only pillagers can. Standards.",
+            "I break blocks by walking. You break blocks by crying.",
+            "My charge attack has more commitment than you.",
+            "I weigh more than your self-esteem. Which is saying nothing."
+        }),
+        Map.entry(EntityType.VEX, new String[]{
+            "I fly through walls. You walk into them.",
+            "I'm tiny and I still terrify you.",
+            "The evoker made me. Who made you? They should apologize.",
+            "I phase through blocks. You can't even place them straight.",
+            "I'm literally a ghost with a sword and that's still your worst nightmare."
+        }),
+        Map.entry(EntityType.DROWNED, new String[]{
+            "I died and came back. You'll just die.",
+            "Nice boat. Be a shame if I pulled you under.",
+            "I throw tridents better than you throw punches.",
+            "I've been underwater longer than you've been good at this game. So, forever.",
+            "Even the fish avoid you."
+        }),
+        Map.entry(EntityType.HUSK, new String[]{
+            "I give hunger because looking at you makes me sick.",
+            "I survive in the desert. You can't survive a baby zombie.",
+            "I don't burn in sunlight. I'm just better.",
+            "You came to the desert without water? Genius move.",
+            "I'm a dried-out zombie and I'm still more alive than your gameplay."
+        }),
+        Map.entry(EntityType.STRAY, new String[]{
+            "Slowness arrows because you deserve to suffer longer.",
+            "I live in the coldest biome and I'm still colder than your combat skills.",
+            "My tattered clothes still look better than your skin.",
+            "I aim better frozen than you do warmed up.",
+            "The tundra is more welcoming than your base."
+        }),
+        Map.entry(EntityType.WARDEN, new String[]{
+            "I don't need eyes to know you're pathetic.",
+            "Sneak all you want. I can smell your fear.",
+            "I one-shot people with full netherite. You're wearing THAT?",
+            "The deep dark is my home. It'll be your grave.",
+            "I was designed to be unkillable. You were designed to lose."
+        }),
+        Map.entry(EntityType.ALLAY, new String[]{
+            "I collect items better than you collect wins.",
+            "You gave me a dirt block. A DIRT BLOCK. Really?",
+            "I dance to music. You can't even dance around mobs.",
+            "I'm adorable and useful. You're neither.",
+            "I sort items faster than you sort out your life."
+        }),
+        Map.entry(EntityType.SNIFFER, new String[]{
+            "I was extinct and they brought me back. Nobody would do that for you.",
+            "I sniff out ancient seeds. You can't sniff out a cave.",
+            "I'm a living fossil and I'm still more relevant than you.",
+            "My eggs are rarer than your accomplishments.",
+            "I walked with dinosaurs. You walk into lava."
+        }),
+        Map.entry(EntityType.CAMEL, new String[]{
+            "Two people can ride me. Nobody wants to ride with you.",
+            "I dash. You crash.",
+            "I survive deserts. You can't survive a rainy night.",
+            "My spit has more value than your opinion.",
+            "I'm taller than you and I like looking down."
+        }),
+        Map.entry(EntityType.FROG, new String[]{
+            "I eat magma cubes for breakfast. You eat dirt.",
+            "Ribbit. That's frog for 'you're beneath me.'",
+            "I can jump. Your skill level can't.",
+            "I come in three colors. You come in one: disappointing.",
+            "I make froglights. You make mistakes."
+        }),
+        Map.entry(EntityType.AXOLOTL, new String[]{
+            "I play dead better than you play alive.",
+            "I'm cute enough to be protected. You're not.",
+            "I regenerate. Your reputation doesn't.",
+            "I fight guardians for fun. You run from chickens.",
+            "Bucket me one more time. See if I forgive you."
+        }),
+        Map.entry(EntityType.GOAT, new String[]{
+            "I WILL ram you off this mountain. Don't test me.",
+            "My screaming variant is less annoying than you.",
+            "I drop goat horns. You drop the ball.",
+            "I live on mountaintops. You belong in a swamp.",
+            "I headbutt things for fun and you're next."
+        }),
+        Map.entry(EntityType.GLOW_SQUID, new String[]{
+            "I glow. You're dim. In every way.",
+            "I won the mob vote and I'd win against you too.",
+            "My ink sacs are worth more than your whole inventory.",
+            "I light up the ocean. You light up nothing.",
+            "Even underwater I shine brighter than your future."
+        }),
+        Map.entry(EntityType.SQUID, new String[]{
+            "I ink when threatened. You just panic.",
+            "I have eight arms and zero respect for you.",
+            "I live in water. You're in over your head.",
+            "My ink is more useful than anything you've crafted.",
+            "I float around doing nothing and I'm still more productive than you."
+        }),
+        Map.entry(EntityType.DOLPHIN, new String[]{
+            "I give you speed boost and you STILL can't keep up.",
+            "I find treasure for you because you clearly can't do it yourself.",
+            "I'm smarter than you and I live in the ocean.",
+            "You can barely swim. Embarrassing for a biped.",
+            "I help you and you don't even say thanks. Typical."
+        }),
+        Map.entry(EntityType.TURTLE, new String[]{
+            "I'm slow and I still accomplish more than you.",
+            "My shell is tougher than your ego.",
+            "I lay eggs on a beach. You lay waste to everything.",
+            "Slow and steady wins the race. You're just slow.",
+            "My baby form is cuter than you'll ever be."
+        }),
+        Map.entry(EntityType.PANDA, new String[]{
+            "I sit around eating bamboo and I'm still more productive than you.",
+            "I sneeze and drop slimeballs. You sneeze and drop nothing of value.",
+            "I'm endangered. Your skill set is already extinct.",
+            "I roll around for fun. You roll around in failure.",
+            "Even my lazy variant works harder than you."
+        }),
+        Map.entry(EntityType.POLAR_BEAR, new String[]{
+            "Come near my cub. I dare you. I DOUBLE dare you.",
+            "I live in the ice and I'm still warmer than your personality.",
+            "I'm neutral until provoked. You're useless all the time.",
+            "I drop raw cod. You drop your standards.",
+            "The arctic doesn't want you. Neither do I."
+        }),
+        Map.entry(EntityType.BEE, new String[]{
+            "I sting once and die but at least I make an impact. Unlike you.",
+            "My hive produces more than you ever will.",
+            "I pollinate flowers. You pollinate nothing.",
+            "Buzz off. Literally. Get away from my hive.",
+            "I work harder in one day than you have all week."
+        }),
+        Map.entry(EntityType.STRIDER, new String[]{
+            "I walk on lava. You fall in it.",
+            "You need a warped fungus just to ride me. Pathetic.",
+            "I shiver when I'm off lava. I shiver when I see you too.",
+            "The Nether floor is my sidewalk. You're just in the way.",
+            "I'm the only way across that lake and I know it."
+        }),
+        Map.entry(EntityType.HOGLIN, new String[]{
+            "I will launch you into the air and laugh about it.",
+            "I drop porkchops. You drop your dignity.",
+            "I run from warped fungus. I run AT everything else. Especially you.",
+            "The Nether is mine. You're just visiting.",
+            "My tusks have ended better players than you."
+        }),
+        Map.entry(EntityType.ZOGLIN, new String[]{
+            "I attack EVERYTHING. You're not special.",
+            "I'm a zombified pig monster and I'm still more stable than you.",
+            "I don't flee from anything. You flee from cave spiders.",
+            "I used to be a hoglin. Now I'm worse. You were always this bad.",
+            "Nothing calms me down. Your gameplay enrages me further."
+        }),
+        Map.entry(EntityType.PIGLIN, new String[]{
+            "Show me gold or get out of my face.",
+            "I barter. You beg. We are not the same.",
+            "Nice gold boots. Too bad the rest of you is garbage.",
+            "I live in a bastion. You live in a hole.",
+            "I hunt hoglins for sport. I'd hunt you but it wouldn't be sporting."
+        }),
+        Map.entry(EntityType.PIGLIN_BRUTE, new String[]{
+            "Gold won't save you from me. Nothing will.",
+            "I don't barter. I just hit.",
+            "My axe has tasted better blood than yours.",
+            "I guard treasure worth more than your life.",
+            "The regular piglins are scared of me. You should be too."
+        }),
+        Map.entry(EntityType.ZOMBIFIED_PIGLIN, new String[]{
+            "Hit me. Go ahead. See what happens.",
+            "My whole squad is watching. Choose wisely.",
+            "I was minding my business. You're the problem here.",
+            "One swing and every piglin in the chunk ends you.",
+            "I'm neutral but I'm HOPING you give me a reason."
+        }),
+        Map.entry(EntityType.BAT, new String[]{
+            "I'm useless and I still contribute more to this world than you.",
+            "I hang upside down. Your gameplay is also backwards.",
+            "I drop nothing. Kind of like your effort.",
+            "I exist just to scare you in caves. And it works.",
+            "Squeak. That means you're terrible."
+        }),
+        Map.entry(EntityType.PARROT, new String[]{
+            "I repeat what mobs say. Even THEY talk trash about you.",
+            "I dance to music. You can't dance around danger.",
+            "I sit on your shoulder and judge you the whole time.",
+            "Feed me a cookie and I die. Looking at you almost has the same effect.",
+            "I mimic creeper hisses because watching you panic is hilarious."
+        }),
+        Map.entry(EntityType.RABBIT, new String[]{
+            "I'm tiny and I still outrun you.",
+            "You can't even catch a rabbit. Think about that.",
+            "My foot is lucky. Meeting you is not.",
+            "I eat your carrots and there's nothing you can do about it.",
+            "The killer bunny variant has more respect for you than I do. And it has none."
+        }),
+        Map.entry(EntityType.HORSE, new String[]{
+            "You're a terrible rider. I'm carrying this relationship.",
+            "My stats are random and they're all better than yours.",
+            "I jump fences. You can't even jump to conclusions properly.",
+            "Stop feeding me golden apples, it won't make you a better rider.",
+            "I run faster without you on my back. Hint hint."
+        }),
+        Map.entry(EntityType.DONKEY, new String[]{
+            "I carry your stuff because you can't manage your own inventory.",
+            "You call me a donkey like it's an insult? Look in the mirror.",
+            "I have a chest. You have emotional baggage.",
+            "I'm stubborn? You're the one who keeps dying to the same mob.",
+            "Even with you on my back I have more sense of direction."
+        }),
+        Map.entry(EntityType.LLAMA, new String[]{
+            "I spit on you because you deserve it.",
+            "My caravan has more coordination than your gameplay.",
+            "I follow other llamas. Nobody follows you.",
+            "My spit does half a heart. Your sword does about the same.",
+            "I wear carpets better than you wear armor."
+        }),
+        Map.entry(EntityType.WANDERING_TRADER, new String[]{
+            "My deals are overpriced and you STILL buy them. Sucker.",
+            "I disappear because even I don't want to be around you for long.",
+            "My llamas have better combat skills than you.",
+            "I sell packed ice for 3 emeralds and you paid it. Twice.",
+            "I wander the world. You wander aimlessly."
+        }),
+        Map.entry(EntityType.MOOSHROOM, new String[]{
+            "I'm a cow with mushrooms and I'm STILL less weird than you.",
+            "Shear me and I become a regular cow. You can't even become regular.",
+            "I give mushroom stew from my body. What do you offer? Nothing.",
+            "I only spawn in rare biomes. You're common in the worst way.",
+            "My island is more exclusive than anything you'll ever build."
+        }),
+        Map.entry(EntityType.SNOW_GOLEM, new String[]{
+            "I melt in rain and I'm still tougher than you.",
+            "My snowballs do zero damage. Still more than you.",
+            "I was built to distract mobs. You distract from good gameplay.",
+            "I leave a snow trail. You leave a trail of bad decisions.",
+            "Two snow blocks and a pumpkin made me. What's your excuse?"
+        }),
+        Map.entry(EntityType.CAVE_SPIDER, new String[]{
+            "I'm smaller, faster, and venomous. You're just smaller.",
+            "Poison. That's what you get for coming into MY mineshaft.",
+            "I fit in one-block gaps. Good luck hitting me.",
+            "My spawner has ended more players than you've killed mobs.",
+            "I'm the reason you hate abandoned mineshafts. You're welcome."
+        }),
+        Map.entry(EntityType.SILVERFISH, new String[]{
+            "Hit the wrong block and there's fifty of me. Good luck.",
+            "I'm in these walls. Watching. Waiting.",
+            "I'm tiny and I still scare you.",
+            "Strongholds are my home. You don't belong here.",
+            "I come in swarms. Your skills don't come at all."
+        }),
+        Map.entry(EntityType.ENDERMITE, new String[]{
+            "I spawned from YOUR ender pearl. This is your fault.",
+            "I'm the most annoying mob and I know it.",
+            "Endermen hate me. You wish mobs cared about you that much.",
+            "I'm tiny, useless, and STILL more memorable than you.",
+            "I exist just to ruin your ender pearl throws."
+        }),
+        Map.entry(EntityType.ZOMBIE_VILLAGER, new String[]{
+            "Cure me and I'll give you a discount. Or don't. See if I care.",
+            "I used to have a job. Now I just judge you for free.",
+            "You could save me but you won't because you're lazy.",
+            "I'm a zombie AND a villager. Double the disappointment in you.",
+            "Even undead I have better trade offers than your conversation."
+        }),
+        Map.entry(EntityType.SKELETON_HORSE, new String[]{
+            "I'm a skeleton AND a horse. Your worst nightmare, twice.",
+            "Lightning made me. Bad luck made you.",
+            "I can't be tamed by someone who can't tame their own inventory.",
+            "I spawn with riders. You spawn alone.",
+            "I'm undead and untameable. Like your bad habits."
+        }),
+        Map.entry(EntityType.OCELOT, new String[]{
+            "You can't tame me anymore. I have standards.",
+            "I run away from you because I have good instincts.",
+            "Creepers fear me. You should take notes.",
+            "I'm rare. You're common.",
+            "I live in the jungle. You'd get lost in a plains biome."
+        }),
+        Map.entry(EntityType.ARMADILLO, new String[]{
+            "I curl up into a ball. You curl up and cry.",
+            "My scutes make wolf armor. You can't even make friends.",
+            "I roll when threatened. You just freeze.",
+            "I'm armored by nature. You need a crafting table.",
+            "Even spiders scare me less than your gameplay scares me."
+        }),
+        Map.entry(EntityType.BREEZE, new String[]{
+            "My wind charges knock you around like a ragdoll.",
+            "I jump higher than your hopes and dreams.",
+            "You can't even hit me. I'm literally bouncing circles around you.",
+            "Trial chambers are my playground. They're your funeral.",
+            "I blow you away. In the bad way."
+        }),
+        Map.entry(EntityType.BOGGED, new String[]{
+            "Poison arrows. Because regular pain isn't enough for you.",
+            "I grew mushrooms on my skull. You can't even grow a garden.",
+            "I live in a swamp. You belong in one.",
+            "My arrows leave a lasting impression. You don't.",
+            "I'm a skeleton but worse. For you."
+        }),
+        Map.entry(EntityType.CREAKING, new String[]{
+            "I only move when you're not looking. But I'm always watching.",
+            "You can't kill me. You can't even find my heart.",
+            "I stand still and I'm still scarier than anything you've faced.",
+            "Look away. I dare you.",
+            "I'm made of wood and I'm harder to deal with than you'll ever be."
+        }),
+        Map.entry(EntityType.ENDER_DRAGON, new String[]{
+            "I'm the final boss and you're the final disappointment.",
+            "You brought beds to fight me? How original. And pathetic.",
+            "I destroy the end crystals of better players than you.",
+            "My breath lingers longer than your will to fight.",
+            "Beat me and what? You still have to go back to your ugly base."
+        }),
+        Map.entry(EntityType.WITHER, new String[]{
+            "You BUILT me. This is YOUR fault.",
+            "Three heads and each one thinks you're a joke.",
+            "I break bedrock. You break under pressure.",
+            "My skulls have more brains than you.",
+            "You summoned me underground? In YOUR base? Genius move."
+        }),
+        Map.entry(EntityType.MULE, new String[]{
+            "I'm a hybrid. You're a mistake.",
+            "I carry chests. You carry dead weight.",
+            "I can't breed. You can't build. We all have problems.",
+            "I'm half horse, half donkey, and fully better than you.",
+            "You only use me for storage. The disrespect."
+        }),
+        Map.entry(EntityType.TRADER_LLAMA, new String[]{
+            "I protect my trader. Who protects you? Nobody.",
+            "I spit harder than you fight.",
+            "My trader's deals are bad but at least he HAS something to offer.",
+            "I travel the world. You travel between your base and a hole.",
+            "I'm a bodyguard llama. You need a bodyguard for baby zombies."
         })
     );
 
@@ -892,7 +1312,7 @@ public class EventListener implements Listener {
             if (random.nextDouble() >= 0.10) continue;
 
             List<LivingEntity> nearbyMobs = new ArrayList<>();
-            for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
+            for (Entity entity : player.getNearbyEntities(10, 10, 10)) {
                 if (entity instanceof LivingEntity living && !(entity instanceof Player)) {
                     nearbyMobs.add(living);
                 }
