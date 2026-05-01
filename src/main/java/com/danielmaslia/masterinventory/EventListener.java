@@ -49,8 +49,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+
+import org.bukkit.entity.EntityType;
 
 public class EventListener implements Listener {
     private final JavaPlugin plugin;
@@ -751,6 +754,159 @@ public class EventListener implements Listener {
             if (block.getState() instanceof org.bukkit.block.Container container) {
                 inventoryManager.removeContainer(container.getInventory().getLocation());
             }
+        }
+    }
+
+    private static final Random random = new Random();
+
+    private static final Map<EntityType, String[]> MOB_MESSAGES = Map.ofEntries(
+        Map.entry(EntityType.CREEPER, new String[]{
+            "Your build is ugly. I'd be doing you a favor.",
+            "I've seen dirt huts with more effort than your base.",
+            "Stand still, I want to redecorate your face.",
+            "You flinched. Pathetic.",
+            "Even TNT has more personality than you."
+        }),
+        Map.entry(EntityType.ZOMBIE, new String[]{
+            "I'd eat your brain but there's clearly nothing there.",
+            "You fight like someone playing with their feet.",
+            "I'm literally rotting and I still look better than you.",
+            "Imagine losing to a mob that can't even open a door.",
+            "Your armor is embarrassing. Just take it off."
+        }),
+        Map.entry(EntityType.SKELETON, new String[]{
+            "I've missed you on purpose. You're not worth the arrow.",
+            "You couldn't dodge a snowball, let alone my shots.",
+            "Even without a brain I'm smarter than you.",
+            "Nice sword. Shame you don't know how to use it.",
+            "I have better aim with no eyes than you do with two."
+        }),
+        Map.entry(EntityType.SPIDER, new String[]{
+            "You scream like a baby when you see me. I heard it.",
+            "I've been on your ceiling for three nights. You never noticed.",
+            "Eight legs and I'm still faster than you.",
+            "Your reflexes are honestly insulting.",
+            "I've wrapped better prey than you. Way better."
+        }),
+        Map.entry(EntityType.ENDERMAN, new String[]{
+            "I moved a block from your build. You still haven't noticed.",
+            "You're not worth teleporting away from.",
+            "I've watched you get lost in your own base. Twice.",
+            "Don't look at me. You'd lose that fight.",
+            "I've seen the End. It's more interesting than you."
+        }),
+        Map.entry(EntityType.WITCH, new String[]{
+            "I'd brew you a potion of intelligence but I don't have enough ingredients.",
+            "You couldn't even beat me without milk. Sad.",
+            "My splash potions have more aim than your life.",
+            "I've hexed smarter people than you. Actually, everyone's smarter.",
+            "Your inventory management is a war crime."
+        }),
+        Map.entry(EntityType.VILLAGER, new String[]{
+            "Hrrm. That means I'm judging you. Heavily.",
+            "I raised my prices because I saw you coming.",
+            "You overpaid last time and I'm still laughing.",
+            "The iron golem doesn't protect you. I told him not to.",
+            "Even a nitwit contributes more than you."
+        }),
+        Map.entry(EntityType.COW, new String[]{
+            "You need me more than I need you. Remember that.",
+            "Moo. That's cow for 'you're annoying.'",
+            "You really came all this way for leather? Loser.",
+            "I've seen your farm. It's pathetic.",
+            "Stop staring at me like I owe you something."
+        }),
+        Map.entry(EntityType.PIG, new String[]{
+            "Put a saddle on me and see what happens. I dare you.",
+            "You smell worse than I do and that's saying something.",
+            "I'd rather be a porkchop than spend another second near you.",
+            "Your carrot farm? I've seen better in a desert.",
+            "Oink. That means you're trash, by the way."
+        }),
+        Map.entry(EntityType.SHEEP, new String[]{
+            "Shear me one more time. See what happens.",
+            "My wool is worth more than everything you own.",
+            "You dyed me pink. I will never forgive you.",
+            "I follow you because I pity you, not because I like you.",
+            "Baa. Translation: you're basic."
+        }),
+        Map.entry(EntityType.CHICKEN, new String[]{
+            "I lay eggs worth more than your entire build.",
+            "You couldn't catch me if I was standing still. Oh wait.",
+            "My feathers have more value than your opinion.",
+            "Even I can fly better than you can play.",
+            "Bawk bawk. That means 'get out of my face.'"
+        }),
+        Map.entry(EntityType.WOLF, new String[]{
+            "I only follow you because you have bones. Don't get it twisted.",
+            "I've seen you fight. I'm embarrassed to be tamed by you.",
+            "You really think we're friends? I tolerate you. Barely.",
+            "I died for you last time and honestly I regret it.",
+            "My previous owner was way better. Just saying."
+        }),
+        Map.entry(EntityType.CAT, new String[]{
+            "I sit on your chest to inconvenience you. On purpose.",
+            "You think I scare creepers for you? I do it for me.",
+            "I've knocked better things off tables than you've ever built.",
+            "Feed me or I leave. Actually, I might leave anyway.",
+            "I've seen your base. My litter box has better interior design."
+        }),
+        Map.entry(EntityType.IRON_GOLEM, new String[]{
+            "I protect the village. Not you. Know the difference.",
+            "One hit. That's all it would take. Remember that.",
+            "These roses are for the villagers. You get nothing.",
+            "I've thrown zombies lighter than your ego.",
+            "Touch a villager and I'll send you to respawn so fast."
+        }),
+        Map.entry(EntityType.PHANTOM, new String[]{
+            "You look awful. When's the last time you slept?",
+            "I exist because you're too stubborn to use a bed. Idiot.",
+            "Your sleep schedule is worse than your combat skills.",
+            "I'm the consequence of your bad decisions. All of them.",
+            "Even insomniacs think you need help."
+        }),
+        Map.entry(EntityType.FOX, new String[]{
+            "I stole your stuff and I'd do it again.",
+            "You're slow, predictable, and honestly boring.",
+            "I could outrun you carrying a chicken. And I have.",
+            "Your berry farm is a joke. I've seen better in the wild.",
+            "I'm cuter, faster, and smarter. Deal with it."
+        })
+    );
+
+    private static final String[] GENERIC_MESSAGES = {
+        "You're really not as good at this game as you think.",
+        "I've seen noobs with better gear than you.",
+        "Why are you even here? Go back to peaceful mode.",
+        "Your base looks like a first-day build. And not in a good way.",
+        "Even the bats are laughing at you.",
+        "I've been watching you. It's not impressive.",
+        "You mine like you've never held a pickaxe before.",
+        "Honestly? The Ender Dragon would be disappointed.",
+        "I'd run from you but it's funnier to watch you panic.",
+        "You're the reason mobs don't respawn. They don't want to deal with you either."
+    };
+
+    public static void mobChat() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (random.nextDouble() >= 0.10) continue;
+
+            List<LivingEntity> nearbyMobs = new ArrayList<>();
+            for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
+                if (entity instanceof LivingEntity living && !(entity instanceof Player)) {
+                    nearbyMobs.add(living);
+                }
+            }
+            if (nearbyMobs.isEmpty()) continue;
+
+            LivingEntity mob = nearbyMobs.get(random.nextInt(nearbyMobs.size()));
+            String name = mob.getCustomName() != null
+                    ? mob.getCustomName()
+                    : StringUtils.formatEnumString(mob.getType().name());
+            String[] messages = MOB_MESSAGES.getOrDefault(mob.getType(), GENERIC_MESSAGES);
+            String message = messages[random.nextInt(messages.length)];
+
+            player.sendMessage("§d[" + name + " whispers] §f" + message);
         }
     }
 

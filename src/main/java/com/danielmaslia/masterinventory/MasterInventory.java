@@ -76,7 +76,10 @@ public final class MasterInventory extends JavaPlugin {
             EventListener.resetVillagers();
         }, 0L, 2400L);
 
-
+        // mob whispers
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            EventListener.mobChat();
+        }, 600L, 600L);
 
     }
 
