@@ -643,7 +643,6 @@ public class EventListener implements Listener {
         boolean modified = false;
         for (MerchantRecipe recipe : recipes) {
             if (recipe.hasExperienceReward()) {
-                recipe.setExperienceReward(false);
                 modified = true;
             }
         }
